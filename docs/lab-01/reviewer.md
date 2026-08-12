@@ -6,13 +6,13 @@
 ## Pull Requests I authored (reviewed by my partner)
 | PR | Branch | Reviewer verdict |
 |----|--------|------------------|
-| #13 | feature/1-project-foundation | Approved |
+| #16 | feature/1-project-foundation | Pending Review |
 |    | feature/2-health-check |  |
 |    | feature/3-category-seed |  |
 |    | feature/4-category-list |  |
 
-Reviewer comment I received: LGTM! Approved project foundation setup.
-How I responded: Thank you for reviewing and approving Issue 1.
+Reviewer comment I received: Pending peer review.
+How I responded: Opened PR #16 for peer review.
 
 ## Pull Requests I reviewed for my partner
 My comment: Reviewed and approved partner's PR for project foundation.
