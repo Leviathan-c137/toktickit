@@ -5,31 +5,32 @@ All test files live under `server/tests/lab-01/` and `client/tests/lab-01/`.
 | # | Tool | Test | Result |
 |---|------|------|--------|
 | 1 | Supertest | GET /api/health returns 200, status=ok | PASSED |
-| 2 | Supertest | GET /api/categories returns 4 seeded categories in id order | Pending (Issue 4) |
+| 2 | Supertest | GET /api/categories returns 4 seeded categories in id order | PASSED |
 | 3 | Vitest | Heading renders | PASSED |
-| 4 | Vitest | Success state shows Online + category list | Pending (Issue 4) |
-| 5 | Vitest | Error state shows Offline + message | Pending (Issue 4) |
+| 4 | Vitest | Success state shows Online + category list | PASSED |
+| 5 | Vitest | Error state shows Offline + message | PASSED |
 
 ### Terminal Output Evidence:
 
-#### Server Health Check Test (Supertest):
+#### Server Integration Tests (Supertest):
 ```text
  RUN  v2.1.9 C:/Users/admin/Downloads/Lab1_Starter_Scaffold/toktickit/server
 
  ✓ tests/lab-01/health.test.ts (1 test) 22ms
+ ✓ tests/lab-01/categories.test.ts (1 test) 126ms
 
- Test Files  1 passed | 1 skipped (2)
-      Tests  1 passed | 1 todo (2)
+ Test Files  2 passed (2)
+      Tests  2 passed (2)
 ```
 
-#### Client Heading Test (Vitest):
+#### Client Unit Tests (Vitest):
 ```text
  RUN  v2.1.9 C:/Users/admin/Downloads/Lab1_Starter_Scaffold/toktickit/client
 
- ✓ tests/lab-01/App.test.tsx (3 tests | 2 skipped) 20ms
+ ✓ tests/lab-01/App.test.tsx (3 tests) 98ms
 
  Test Files  1 passed (1)
-      Tests  1 passed | 2 todo (3)
+      Tests  3 passed (3)
 ```
 
 #### Prisma Category Seed Evidence (Issue 3):

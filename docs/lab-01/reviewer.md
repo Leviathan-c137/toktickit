@@ -8,11 +8,11 @@
 |----|--------|------------------|
 | #16 | feature/1-project-foundation | Approved |
 | #17 | feature/2-health-check | Approved |
-| #18 | feature/3-category-seed | Pending Review |
-|    | feature/4-category-list |  |
+| #18 | feature/3-category-seed | Approved |
+| #19 | feature/4-category-list | Pending Review |
 
-Reviewer comment I received: PR #17 approved. Ready to proceed with Issue 3 seeding.
-How I responded: Merged PR #17 and opened PR #18 for category seed implementation.
+Reviewer comment I received: PR #18 approved. Ready to implement category list API and frontend.
+How I responded: Merged PR #18 and opened PR #19 for category list endpoint and UI implementation.
 
 ## Pull Requests I reviewed for my partner
 My comment: Reviewed and approved partner's PR for project foundation and health check.
