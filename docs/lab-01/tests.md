@@ -31,3 +31,11 @@ All test files live under `server/tests/lab-01/` and `client/tests/lab-01/`.
  Test Files  1 passed (1)
       Tests  1 passed | 2 todo (3)
 ```
+
+#### Prisma Category Seed Evidence (Issue 3):
+```text
+> toktickit-server@1.0.0 prisma:seed
+> tsx prisma/seed.ts
+
+Categories seeded successfully. (Verified idempotent: 4 categories present in ID order)
+```
