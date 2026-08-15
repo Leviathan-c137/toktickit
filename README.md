@@ -9,6 +9,36 @@ TokTickIT is an IT service desk application for managing Account & Access, Hardw
 - **Database & ORM**: PostgreSQL + Prisma ORM
 - **Testing**: Vitest & Supertest
 
+## Repository Structure
+
+```text
+toktickit/
+├── client/                 # Frontend application
+│   ├── src/                # UI components, React hooks, API client
+│   ├── tests/              # Frontend unit and component tests (Vitest)
+│   │   └── lab-01/
+│   ├── .env.example        # Frontend environment template
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.ts
+├── server/                 # Backend REST API
+│   ├── prisma/             # Prisma schema and seed scripts
+│   ├── src/                # Express application, routes, controllers
+│   ├── tests/              # Backend integration tests (Supertest + Vitest)
+│   │   └── lab-01/
+│   ├── .env.example        # Backend environment template
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vitest.config.ts
+├── docs/                   # Course documentation and review records
+│   └── lab-01/
+│       ├── ai_use.md       # AI agent usage log and reflections
+│       ├── reviewer.md     # Peer review records
+│       └── tests.md        # Test matrix and verification evidence
+├── .gitignore
+└── README.md
+```
+
 ## Prerequisites
 
 - **Node.js**: v18 or later
