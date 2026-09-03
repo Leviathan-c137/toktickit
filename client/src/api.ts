@@ -1,4 +1,4 @@
-import { Category, RelatedSystem, Requester, SystemStatus } from "./types.js";
+import { Category, RelatedSystem, Requester, SystemStatus, Ticket } from "./types.js";
 export * from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -59,5 +59,28 @@ export async function fetchRelatedSystems(): Promise<RelatedSystem[]> {
   if (!res.ok) {
     throw new Error("Failed to fetch related systems");
   }
+  return res.json();
+}
+
+/**
+ * Create a new ticket with optional attachments.
+ */
+export async function createTicket(
+  requesterId: number,
+  formData: FormData
+): Promise<Ticket> {
+  const res = await fetch(`${API_URL}/api/tickets`, {
+    method: "POST",
+    headers: {
+      "x-requester-id": String(requesterId),
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to create ticket (${res.status})`);
+  }
+
   return res.json();
 }

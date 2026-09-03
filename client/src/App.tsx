@@ -2,6 +2,7 @@ import { useState } from "react";
 import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
 import { RequesterSelector } from "./components/RequesterSelector.js";
 import { AppHeader } from "./components/AppHeader.js";
+import { CreateTicket } from "./components/CreateTicket.js";
 import { checkSystem, Category } from "./api.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
@@ -139,6 +140,13 @@ function MainContent() {
                   </div>
                 </div>
               </div>
+            ) : activeTab === "create-ticket" ? (
+              <CreateTicket
+                onSuccess={() => {
+                  // Stay on success view rendered by CreateTicket
+                }}
+                onCancel={() => setActiveTab("tickets")}
+              />
             ) : (
               <div>
                 {/* Active Requester Welcome Bar */}
@@ -170,7 +178,7 @@ function MainContent() {
                   </div>
                 </div>
 
-                {/* Main View Placeholder for Issue 3 & Issue 4 */}
+                {/* My Tickets View Placeholder for Issue 4 */}
                 <div className="card shadow-sm border-0 rounded-3 p-5 text-center bg-white">
                   <div className="py-4">
                     <div
@@ -185,14 +193,16 @@ function MainContent() {
                     >
                       🎫
                     </div>
-                    <h3 className="h5 fw-semibold mb-2">
-                      {activeTab === "create-ticket" ? "Create IT Ticket" : "My IT Tickets"}
-                    </h3>
+                    <h3 className="h5 fw-semibold mb-2">My IT Tickets</h3>
                     <p className="text-muted mx-auto" style={{ maxWidth: "480px", fontSize: "0.95rem" }}>
-                      {activeTab === "create-ticket"
-                        ? "The ticket creation form with categories, systems, priority, and file attachments will be enabled in Issue 3."
-                        : "Ticket dashboard with search, filtering, and ownership isolation will be enabled in Issue 4."}
+                      Ticket dashboard with search, filtering, and ownership isolation will be enabled in Issue 4.
                     </p>
+                    <button
+                      className="btn btn-success mt-2"
+                      onClick={() => setActiveTab("create-ticket")}
+                    >
+                      + Create Your First Ticket
+                    </button>
                   </div>
                 </div>
               </div>
