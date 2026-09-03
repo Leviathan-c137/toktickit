@@ -16,7 +16,7 @@ This sprint employs **Test-Driven Development (TDD)** and **Test-Driven Design (
 |---|---|---|---|---|---|---|
 | **UNIT-01** | Unit | BR-01, FR-04 | Ticket Number generator format | Returns `TKT-YYYY-NNNNNN` with 6 digits zero-padded | `server/tests/lab-02/ticket-number.test.ts` | Planned |
 | **UNIT-02** | Unit | BR-10, FR-06 | Attachment file constraint validator | Rejects files $> 5$ MB or with invalid extensions (`.exe`, `.zip`) | `server/tests/lab-02/attachment-validator.test.ts` | Planned |
-| **API-01** | API | AC-01, FR-01 | Fetch active development requesters | HTTP 200; only active users returned; inactive user excluded | `server/tests/lab-02/requesters.api.test.ts` | Planned |
+| **API-01** | API | AC-01, FR-01 | Fetch active development requesters | HTTP 200; only active users returned; inactive user excluded | `server/tests/lab-02/requesters.api.test.ts` | Passed |
 | **API-02** | API | AC-03, FR-03 | Create valid ticket with attachment | HTTP 201; ticket saved with `TKT-` number; attachment saved; status `New` | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
 | **API-03** | API | AC-04, BR-06 | Ticket creation missing summary | HTTP 400 with validation message; ticket not created | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
 | **API-04** | API | AC-05, BR-10 | Ticket creation with oversized attachment | HTTP 413; file rejected; ticket not created | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
@@ -28,7 +28,7 @@ This sprint employs **Test-Driven Development (TDD)** and **Test-Driven Design (
 | **API-10** | API | AC-12, BR-11 | Soft-remove attachment with valid reason | HTTP 200; `isRemoved = true`; removal reason and timestamp recorded | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | **API-11** | API | AC-12, BR-11 | Download soft-removed attachment | HTTP 410 Gone; download stream rejected | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | **API-12** | API | BR-12 | Download attachment belonging to another requester's ticket | HTTP 403 Forbidden | `server/tests/lab-02/attachments.api.test.ts` | Planned |
-| **UI-01** | UI | AC-01, FR-01 | Development Requester selector renders active options | Dropdown populates; selecting stores context | `client/src/tests/lab-02/RequesterSelector.test.tsx` | Planned |
+| **UI-01** | UI | AC-01, FR-01 | Development Requester selector renders active options | Dropdown populates; selecting stores context | `client/tests/lab-02/RequesterSelector.test.tsx` | Passed |
 | **UI-02** | UI | AC-04, BR-06 | Create Ticket form client validation | Inline field error appears when summary $< 5$ characters | `client/src/tests/lab-02/CreateTicket.test.tsx` | Planned |
 | **UI-03** | UI | AC-05, BR-10 | Create Ticket file size validation | Error message rendered if file $> 5$ MB | `client/src/tests/lab-02/CreateTicket.test.tsx` | Planned |
 | **UI-04** | UI | AC-06, BR-13 | Create Ticket form state preservation on API failure | Form inputs retained after simulated 500 error | `client/src/tests/lab-02/CreateTicket.test.tsx` | Planned |

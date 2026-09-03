@@ -11,17 +11,96 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
-// Issue 3 — Create and seed IT request categories
-// Define a Category model with:
-//   id        Int      @id @default(autoincrement())
-//   name      String   @unique
-//   createdAt DateTime @default(now())
-// Then run:  npx prisma migrate dev --name init
+// Lab 2 Data Models & Enums
 // ---------------------------------------------------------------------------
+
+enum Priority {
+  Low
+  Medium
+  High
+  Urgent
+}
+
+enum TicketStatus {
+  New
+  Open
+  InProgress
+  Pending
+  Resolved
+  Closed
+  Cancelled
+}
+
+model RequesterUser {
+  id         Int      @id @default(autoincrement())
+  fullName   String
+  email      String   @unique
+  department String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tickets    Ticket[]
+}
+
+model RelatedSystem {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  tickets   Ticket[]
+}
 
 model Category {
   id        Int      @id @default(autoincrement())
   name      String   @unique
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  tickets   Ticket[]
 }
 
+model Ticket {
+  id                Int           @id @default(autoincrement())
+  ticketNumber      String        @unique
+  summary           String
+  description       String
+  requestedPriority Priority      @default(Medium)
+  itPriority        Priority      @default(Medium)
+  status            TicketStatus  @default(New)
+  
+  requesterId       Int
+  requester         RequesterUser @relation(fields: [requesterId], references: [id])
+  
+  categoryId        Int
+  category          Category      @relation(fields: [categoryId], references: [id])
+  
+  relatedSystemId   Int
+  relatedSystem     RelatedSystem @relation(fields: [relatedSystemId], references: [id])
+  
+  attachments       Attachment[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([requesterId])
+  @@index([status])
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model Attachment {
+  id             Int       @id @default(autoincrement())
+  ticketId       Int
+  ticket         Ticket    @relation(fields: [ticketId], references: [id])
+  originalName   String
+  storedFilename String
+  mimeType       String
+  fileSizeBytes  Int
+  
+  isRemoved      Boolean   @default(false)
+  removedAt      DateTime?
+  removalReason  String?
+
+  createdAt      DateTime  @default(now())
+
+  @@index([ticketId])
+  @@index([isRemoved])
+}

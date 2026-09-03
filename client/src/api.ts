@@ -1,20 +1,11 @@
+import { Category, RelatedSystem, Requester, SystemStatus } from "./types.js";
+export * from "./types.js";
+
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
-export interface Category {
-  id: number;
-  name: string;
-}
-
-export interface SystemStatus {
-  online: boolean;
-  categories: Category[];
-}
-
-// Issue 2 + Issue 4 — call the backend.
-// Steps: fetch `${API_URL}/api/health`; if not ok, throw.
-//        then fetch `${API_URL}/api/categories`; if not ok, throw.
-//        return { online: true, categories }.
-// Throwing on failure lets the UI show a single Offline/error state.
+// ---------------------------------------------------------------------------
+// Lab 1 System Status check (preserved for backwards compatibility & tests)
+// ---------------------------------------------------------------------------
 export async function checkSystem(): Promise<SystemStatus> {
   const healthRes = await fetch(`${API_URL}/api/health`);
   if (!healthRes.ok) {
@@ -32,4 +23,41 @@ export async function checkSystem(): Promise<SystemStatus> {
   const categories: Category[] = await catRes.json();
 
   return { online: true, categories };
+}
+
+// ---------------------------------------------------------------------------
+// Lab 2 Reference Data & Requester APIs
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch active development requesters for the context selector.
+ */
+export async function fetchActiveRequesters(): Promise<Requester[]> {
+  const res = await fetch(`${API_URL}/api/requesters/active`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch active requesters");
+  }
+  return res.json();
+}
+
+/**
+ * Fetch all active incident categories.
+ */
+export async function fetchCategories(): Promise<Category[]> {
+  const res = await fetch(`${API_URL}/api/categories`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch categories");
+  }
+  return res.json();
+}
+
+/**
+ * Fetch all active campus related systems.
+ */
+export async function fetchRelatedSystems(): Promise<RelatedSystem[]> {
+  const res = await fetch(`${API_URL}/api/related-systems`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch related systems");
+  }
+  return res.json();
 }
