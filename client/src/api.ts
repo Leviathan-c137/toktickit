@@ -84,3 +84,40 @@ export async function createTicket(
 
   return res.json();
 }
+
+/**
+ * Fetch tickets owned strictly by the active requester with optional filters & pagination.
+ */
+export async function fetchMyTickets(
+  requesterId: number,
+  filters?: import("./types.js").TicketFilters
+): Promise<import("./types.js").PaginatedTickets> {
+  const params = new URLSearchParams();
+  if (filters?.search) params.append("search", filters.search);
+  if (filters?.categoryId !== undefined && filters.categoryId !== null) {
+    params.append("categoryId", String(filters.categoryId));
+  }
+  if (filters?.requestedPriority) params.append("requestedPriority", filters.requestedPriority);
+  if (filters?.status) params.append("status", filters.status);
+  if (filters?.sortBy) params.append("sortBy", filters.sortBy);
+  if (filters?.sortOrder) params.append("sortOrder", filters.sortOrder);
+  if (filters?.page) params.append("page", String(filters.page));
+  if (filters?.limit) params.append("limit", String(filters.limit));
+
+  const qs = params.toString();
+  const url = `${API_URL}/api/tickets${qs ? `?${qs}` : ""}`;
+
+  const res = await fetch(url, {
+    headers: {
+      "x-requester-id": String(requesterId),
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to fetch tickets (${res.status})`);
+  }
+
+  return res.json();
+}
+

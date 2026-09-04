@@ -67,7 +67,53 @@ export interface Ticket {
   updatedAt: string;
 }
 
+export interface TicketListItem {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  category: {
+    id: number;
+    name: string;
+  };
+  relatedSystem: {
+    id: number;
+    name: string;
+  };
+  requestedPriority: Priority;
+  itPriority: Priority;
+  status: TicketStatus;
+  createdAt: string;
+  updatedAt: string;
+  activeAttachmentsCount: number;
+}
+
+export interface PaginationMetadata {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface PaginatedTickets {
+  items: TicketListItem[];
+  pagination: PaginationMetadata;
+}
+
+export interface TicketFilters {
+  search?: string;
+  categoryId?: number;
+  requestedPriority?: Priority;
+  status?: TicketStatus;
+  sortBy?: "createdAt" | "ticketNumber" | "updatedAt";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}
+
 export interface SystemStatus {
   online: boolean;
   categories: Category[];
 }
+
