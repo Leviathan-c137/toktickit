@@ -374,4 +374,180 @@ app.post(
   }
 );
 
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 4 — Ticket Listing Endpoint (GET /api/tickets)
+// ---------------------------------------------------------------------------
+
+app.get(
+  "/api/tickets",
+  requireRequester as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+
+    try {
+      // 1. Pagination parameters
+      let page = 1;
+      if (req.query.page !== undefined) {
+        page = parseInt(req.query.page as string, 10);
+        if (isNaN(page) || page < 1) {
+          return res.status(400).json({
+            statusCode: 400,
+            error: "Bad Request",
+            message: "Page must be a positive integer",
+          });
+        }
+      }
+
+      let limit = 10;
+      if (req.query.limit !== undefined) {
+        limit = parseInt(req.query.limit as string, 10);
+        if (isNaN(limit) || limit < 1 || limit > 50) {
+          return res.status(400).json({
+            statusCode: 400,
+            error: "Bad Request",
+            message: "Limit must be between 1 and 50",
+          });
+        }
+      }
+
+      // 2. Sorting parameters
+      const validSortFields = ["createdAt", "ticketNumber", "updatedAt"];
+      const sortBy = (req.query.sortBy as string) || "createdAt";
+      if (!validSortFields.includes(sortBy)) {
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Invalid sortBy parameter",
+        });
+      }
+
+      const validSortOrders = ["asc", "desc"];
+      const sortOrder = (req.query.sortOrder as string) || "desc";
+      if (!validSortOrders.includes(sortOrder)) {
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Invalid sortOrder parameter",
+        });
+      }
+
+      // 3. Filter criteria (Ownership isolation: BR-12, FR-07, AC-07)
+      const where: any = {
+        requesterId: req.requester!.id,
+      };
+
+      // Search keyword (ticketNumber or summary)
+      if (typeof req.query.search === "string" && req.query.search.trim()) {
+        const keyword = req.query.search.trim();
+        where.OR = [
+          { ticketNumber: { contains: keyword, mode: "insensitive" } },
+          { summary: { contains: keyword, mode: "insensitive" } },
+        ];
+      }
+
+      // Category filter
+      if (req.query.categoryId !== undefined) {
+        const catId = parseInt(req.query.categoryId as string, 10);
+        if (isNaN(catId)) {
+          return res.status(400).json({
+            statusCode: 400,
+            error: "Bad Request",
+            message: "Invalid categoryId filter",
+          });
+        }
+        where.categoryId = catId;
+      }
+
+      // Priority filter
+      const validPriorities = ["Low", "Medium", "High", "Urgent"];
+      if (req.query.requestedPriority !== undefined) {
+        const requestedPriority = req.query.requestedPriority as string;
+        if (!validPriorities.includes(requestedPriority)) {
+          return res.status(400).json({
+            statusCode: 400,
+            error: "Bad Request",
+            message: "Invalid requestedPriority filter",
+          });
+        }
+        where.requestedPriority = requestedPriority;
+      }
+
+      // Status filter
+      const validStatuses = [
+        "New",
+        "Open",
+        "InProgress",
+        "Pending",
+        "Resolved",
+        "Closed",
+        "Cancelled",
+      ];
+      if (req.query.status !== undefined) {
+        const status = req.query.status as string;
+        if (!validStatuses.includes(status)) {
+          return res.status(400).json({
+            statusCode: 400,
+            error: "Bad Request",
+            message: "Invalid status filter",
+          });
+        }
+        where.status = status;
+      }
+
+      // 4. Count total matching items
+      const totalItems = await prisma.ticket.count({ where });
+      const totalPages = Math.ceil(totalItems / limit);
+
+      // 5. Query items
+      const tickets = await prisma.ticket.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder as "asc" | "desc" },
+        include: {
+          category: { select: { id: true, name: true } },
+          relatedSystem: { select: { id: true, name: true } },
+          attachments: {
+            where: { isRemoved: false },
+            select: { id: true },
+          },
+        },
+      });
+
+      const items = tickets.map((t) => ({
+        id: t.id,
+        ticketNumber: t.ticketNumber,
+        summary: t.summary,
+        category: t.category,
+        relatedSystem: t.relatedSystem,
+        requestedPriority: t.requestedPriority,
+        itPriority: t.itPriority,
+        status: t.status,
+        createdAt: t.createdAt.toISOString(),
+        updatedAt: t.updatedAt.toISOString(),
+        activeAttachmentsCount: t.attachments.length,
+      }));
+
+      return res.status(200).json({
+        items,
+        pagination: {
+          page,
+          limit,
+          totalItems,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      });
+    } catch (err) {
+      return res.status(500).json({
+        statusCode: 500,
+        error: "Internal Server Error",
+        message: "Failed to retrieve tickets",
+      });
+    }
+  }
+);
+
 export default app;
+

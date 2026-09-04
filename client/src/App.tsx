@@ -3,6 +3,7 @@ import { RequesterProvider, useRequester } from "./context/RequesterContext.js";
 import { RequesterSelector } from "./components/RequesterSelector.js";
 import { AppHeader } from "./components/AppHeader.js";
 import { CreateTicket } from "./components/CreateTicket.js";
+import { MyTickets } from "./components/MyTickets.js";
 import { checkSystem, Category } from "./api.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
@@ -178,33 +179,14 @@ function MainContent() {
                   </div>
                 </div>
 
-                {/* My Tickets View Placeholder for Issue 4 */}
-                <div className="card shadow-sm border-0 rounded-3 p-5 text-center bg-white">
-                  <div className="py-4">
-                    <div
-                      className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                      style={{
-                        width: "64px",
-                        height: "64px",
-                        backgroundColor: "#EAF6EF",
-                        color: "#006B3C",
-                        fontSize: "2rem",
-                      }}
-                    >
-                      🎫
-                    </div>
-                    <h3 className="h5 fw-semibold mb-2">My IT Tickets</h3>
-                    <p className="text-muted mx-auto" style={{ maxWidth: "480px", fontSize: "0.95rem" }}>
-                      Ticket dashboard with search, filtering, and ownership isolation will be enabled in Issue 4.
-                    </p>
-                    <button
-                      className="btn btn-success mt-2"
-                      onClick={() => setActiveTab("create-ticket")}
-                    >
-                      + Create Your First Ticket
-                    </button>
-                  </div>
-                </div>
+                {/* My Tickets View (Issue 4) */}
+                <MyTickets
+                  onCreateTicket={() => setActiveTab("create-ticket")}
+                  onSelectTicket={(ticketId) => {
+                    // Ready for Ticket Detail view in Issue 5
+                    console.log("Selected ticket:", ticketId);
+                  }}
+                />
               </div>
             )}
           </div>
