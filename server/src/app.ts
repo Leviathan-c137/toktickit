@@ -1,6 +1,10 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import fs from "fs";
 import { getPrisma } from "./prisma.js";
+import { upload } from "./utils/upload.js";
+import { generateTicketNumber } from "./utils/ticketNumber.js";
+import { validateAttachment } from "./utils/attachmentValidator.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -143,5 +147,231 @@ app.get("/api/related-systems", async (_req: Request, res: Response) => {
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 3 — Ticket Creation Endpoint (POST /api/tickets)
+// ---------------------------------------------------------------------------
+
+// Multer error handling wrapper
+function handleFileUpload(req: Request, res: Response, next: NextFunction) {
+  upload.array("files", 5)(req, res, (err: any) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(413).json({
+          statusCode: 413,
+          error: "Payload Too Large",
+          message: "File exceeds the maximum allowed limit of 5 MB",
+        });
+      }
+      if (err.code === "LIMIT_UNEXPECTED_FILE" || err.code === "LIMIT_FILE_COUNT") {
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "A maximum of 5 files can be attached per ticket",
+        });
+      }
+      return res.status(400).json({
+        statusCode: 400,
+        error: "Bad Request",
+        message: err.message || "File upload error",
+      });
+    }
+    next();
+  });
+}
+
+app.post(
+  "/api/tickets",
+  requireRequester as any,
+  handleFileUpload,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+    const files = (req.files as Express.Multer.File[]) || [];
+
+    // Helper to clean up uploaded files on validation failure
+    const cleanupUploadedFiles = () => {
+      for (const file of files) {
+        if (file.path && fs.existsSync(file.path)) {
+          try {
+            fs.unlinkSync(file.path);
+          } catch {
+            // ignore unlink error
+          }
+        }
+      }
+    };
+
+    try {
+      // 1. Validate Attachments (BR-10, FR-06)
+      for (const file of files) {
+        const val = validateAttachment({
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+        });
+
+        if (!val.valid) {
+          cleanupUploadedFiles();
+          return res.status(val.statusCode || 400).json({
+            statusCode: val.statusCode || 400,
+            error: val.statusCode === 413 ? "Payload Too Large" : "Unsupported Media Type",
+            message: val.error,
+          });
+        }
+      }
+
+      // 2. Validate Summary (BR-06: 5–150 chars)
+      const summary = typeof req.body.summary === "string" ? req.body.summary.trim() : "";
+      if (summary.length < 5 || summary.length > 150) {
+        cleanupUploadedFiles();
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Summary must be between 5 and 150 characters",
+          details: [{ field: "summary", issue: "Summary must be between 5 and 150 characters" }],
+        });
+      }
+
+      // 3. Validate Description (BR-07: 10–2000 chars)
+      const description = typeof req.body.description === "string" ? req.body.description.trim() : "";
+      if (description.length < 10 || description.length > 2000) {
+        cleanupUploadedFiles();
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Description must be between 10 and 2000 characters",
+          details: [{ field: "description", issue: "Description must be between 10 and 2000 characters" }],
+        });
+      }
+
+      // 4. Validate Requested Priority (BR-08: Low, Medium, High, Urgent)
+      const allowedPriorities = ["Low", "Medium", "High", "Urgent"];
+      const requestedPriority = req.body.requestedPriority || "Medium";
+      if (!allowedPriorities.includes(requestedPriority)) {
+        cleanupUploadedFiles();
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Requested priority must be one of Low, Medium, High, Urgent",
+          details: [{ field: "requestedPriority", issue: "Invalid priority value" }],
+        });
+      }
+
+      // 5. Validate Category (BR-09)
+      const categoryId = parseInt(req.body.categoryId, 10);
+      if (isNaN(categoryId)) {
+        cleanupUploadedFiles();
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Category ID is required and must be a number",
+          details: [{ field: "categoryId", issue: "Category ID is required" }],
+        });
+      }
+      const category = await prisma.category.findUnique({ where: { id: categoryId } });
+      if (!category || !category.isActive) {
+        cleanupUploadedFiles();
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Selected Category does not exist or is inactive",
+          details: [{ field: "categoryId", issue: "Invalid or inactive Category" }],
+        });
+      }
+
+      // 6. Validate Related System (BR-09)
+      const relatedSystemId = parseInt(req.body.relatedSystemId, 10);
+      if (isNaN(relatedSystemId)) {
+        cleanupUploadedFiles();
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Related System ID is required and must be a number",
+          details: [{ field: "relatedSystemId", issue: "Related System ID is required" }],
+        });
+      }
+      const relatedSystem = await prisma.relatedSystem.findUnique({ where: { id: relatedSystemId } });
+      if (!relatedSystem || !relatedSystem.isActive) {
+        cleanupUploadedFiles();
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Selected Related System does not exist or is inactive",
+          details: [{ field: "relatedSystemId", issue: "Invalid or inactive Related System" }],
+        });
+      }
+
+      // 7. Atomic Ticket and Attachment Creation
+      const createdTicket = await prisma.$transaction(async (tx) => {
+        // Step A: Insert ticket with temporary ticketNumber
+        const tempTicket = await tx.ticket.create({
+          data: {
+            ticketNumber: `TEMP-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            summary,
+            description,
+            requestedPriority: requestedPriority as any,
+            itPriority: "Medium",
+            status: "New",
+            requesterId: req.requester!.id,
+            categoryId,
+            relatedSystemId,
+          },
+        });
+
+        // Step B: Generate official monotonic ticket number
+        const officialTicketNumber = generateTicketNumber(tempTicket.id);
+        await tx.ticket.update({
+          where: { id: tempTicket.id },
+          data: { ticketNumber: officialTicketNumber },
+        });
+
+        // Step C: Record attachments if present
+        if (files.length > 0) {
+          for (const f of files) {
+            await tx.attachment.create({
+              data: {
+                ticketId: tempTicket.id,
+                originalName: f.originalname,
+                storedFilename: f.filename,
+                mimeType: f.mimetype,
+                fileSizeBytes: f.size,
+              },
+            });
+          }
+        }
+
+        // Return ticket with relations
+        return await tx.ticket.findUnique({
+          where: { id: tempTicket.id },
+          include: {
+            requester: { select: { id: true, fullName: true, email: true } },
+            category: { select: { id: true, name: true } },
+            relatedSystem: { select: { id: true, name: true } },
+            attachments: {
+              where: { isRemoved: false },
+              select: {
+                id: true,
+                originalName: true,
+                mimeType: true,
+                fileSizeBytes: true,
+                isRemoved: true,
+                createdAt: true,
+              },
+            },
+          },
+        });
+      });
+
+      return res.status(201).json(createdTicket);
+    } catch (err) {
+      cleanupUploadedFiles();
+      return res.status(500).json({
+        statusCode: 500,
+        error: "Internal Server Error",
+        message: "Failed to create ticket",
+      });
+    }
+  }
+);
 
 export default app;
