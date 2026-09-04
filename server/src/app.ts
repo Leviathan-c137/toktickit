@@ -1,8 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import fs from "fs";
+import path from "path";
 import { getPrisma } from "./prisma.js";
-import { upload } from "./utils/upload.js";
+import { upload, UPLOAD_DIR } from "./utils/upload.js";
 import { generateTicketNumber } from "./utils/ticketNumber.js";
 import { validateAttachment } from "./utils/attachmentValidator.js";
 
@@ -549,5 +550,401 @@ app.get(
   }
 );
 
+// ---------------------------------------------------------------------------
+// Lab 2 Issue 5 — Ticket Detail & Attachment Lifecycle Endpoints
+// ---------------------------------------------------------------------------
+
+// Single file upload wrapper
+function handleSingleFileUpload(req: Request, res: Response, next: NextFunction) {
+  upload.single("file")(req, res, (err: any) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(413).json({
+          statusCode: 413,
+          error: "Payload Too Large",
+          message: "File exceeds the maximum allowed limit of 5 MB",
+        });
+      }
+      return res.status(400).json({
+        statusCode: 400,
+        error: "Bad Request",
+        message: err.message || "File upload error",
+      });
+    }
+    next();
+  });
+}
+
+/**
+ * GET /api/tickets/:id
+ * Retrieve full details of an owned ticket (AC-10, AC-11, BR-12)
+ */
+app.get(
+  "/api/tickets/:id",
+  requireRequester as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = parseInt(req.params.id, 10);
+
+    if (isNaN(ticketId)) {
+      return res.status(400).json({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "Invalid ticket ID",
+      });
+    }
+
+    try {
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+        include: {
+          requester: {
+            select: { id: true, fullName: true, email: true, department: true },
+          },
+          category: { select: { id: true, name: true } },
+          relatedSystem: { select: { id: true, name: true } },
+          attachments: {
+            select: {
+              id: true,
+              originalName: true,
+              mimeType: true,
+              fileSizeBytes: true,
+              isRemoved: true,
+              removedAt: true,
+              removalReason: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      });
+
+      if (!ticket) {
+        return res.status(404).json({
+          statusCode: 404,
+          error: "Not Found",
+          message: "Ticket not found",
+        });
+      }
+
+      // Ownership isolation check (BR-12, AC-11)
+      if (ticket.requesterId !== req.requester!.id) {
+        return res.status(403).json({
+          statusCode: 403,
+          error: "Forbidden",
+          message: "You do not have permission to view this ticket",
+        });
+      }
+
+      return res.status(200).json(ticket);
+    } catch (err) {
+      return res.status(500).json({
+        statusCode: 500,
+        error: "Internal Server Error",
+        message: "Failed to retrieve ticket details",
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/tickets/:id/attachments
+ * Upload a new attachment to an existing owned ticket (AC-12, FR-11, BR-10)
+ */
+app.post(
+  "/api/tickets/:id/attachments",
+  requireRequester as any,
+  handleSingleFileUpload,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = parseInt(req.params.id, 10);
+    const file = req.file;
+
+    const cleanupFile = () => {
+      if (file?.path && fs.existsSync(file.path)) {
+        try {
+          fs.unlinkSync(file.path);
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    if (isNaN(ticketId)) {
+      cleanupFile();
+      return res.status(400).json({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "Invalid ticket ID",
+      });
+    }
+
+    try {
+      // 1. Verify ticket existence & ownership
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticket) {
+        cleanupFile();
+        return res.status(404).json({
+          statusCode: 404,
+          error: "Not Found",
+          message: "Ticket not found",
+        });
+      }
+
+      if (ticket.requesterId !== req.requester!.id) {
+        cleanupFile();
+        return res.status(403).json({
+          statusCode: 403,
+          error: "Forbidden",
+          message: "You do not have permission to modify this ticket",
+        });
+      }
+
+      // 2. Validate file presence
+      if (!file) {
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "File is required",
+        });
+      }
+
+      // 3. Validate active attachments limit (Max 5 active, FR-06, BR-10)
+      const activeCount = await prisma.attachment.count({
+        where: { ticketId, isRemoved: false },
+      });
+
+      if (activeCount >= 5) {
+        cleanupFile();
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "A maximum of 5 active attachments can be attached to a ticket",
+        });
+      }
+
+      // 4. Validate file constraints (BR-10)
+      const val = validateAttachment({
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      });
+
+      if (!val.valid) {
+        cleanupFile();
+        return res.status(val.statusCode || 400).json({
+          statusCode: val.statusCode || 400,
+          error: val.statusCode === 413 ? "Payload Too Large" : "Unsupported Media Type",
+          message: val.error,
+        });
+      }
+
+      // 5. Save attachment record
+      const createdAttachment = await prisma.attachment.create({
+        data: {
+          ticketId,
+          originalName: file.originalname,
+          storedFilename: file.filename,
+          mimeType: file.mimetype,
+          fileSizeBytes: file.size,
+        },
+        select: {
+          id: true,
+          originalName: true,
+          mimeType: true,
+          fileSizeBytes: true,
+          isRemoved: true,
+          removedAt: true,
+          removalReason: true,
+          createdAt: true,
+        },
+      });
+
+      return res.status(201).json(createdAttachment);
+    } catch (err) {
+      cleanupFile();
+      return res.status(500).json({
+        statusCode: 500,
+        error: "Internal Server Error",
+        message: "Failed to upload attachment",
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/attachments/:id/download
+ * Download an active attachment file (AC-12, BR-11, BR-12)
+ */
+app.get(
+  "/api/attachments/:id/download",
+  requireRequester as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+    const attachmentId = parseInt(req.params.id, 10);
+
+    if (isNaN(attachmentId)) {
+      return res.status(400).json({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "Invalid attachment ID",
+      });
+    }
+
+    try {
+      const attachment = await prisma.attachment.findUnique({
+        where: { id: attachmentId },
+        include: { ticket: true },
+      });
+
+      if (!attachment) {
+        return res.status(404).json({
+          statusCode: 404,
+          error: "Not Found",
+          message: "Attachment not found",
+        });
+      }
+
+      // Ownership isolation check (BR-12, AC-11)
+      if (attachment.ticket.requesterId !== req.requester!.id) {
+        return res.status(403).json({
+          statusCode: 403,
+          error: "Forbidden",
+          message: "You do not have permission to download this attachment",
+        });
+      }
+
+      // Soft-removal block (BR-11, AC-12) -> HTTP 410 Gone
+      if (attachment.isRemoved) {
+        return res.status(410).json({
+          statusCode: 410,
+          error: "Gone",
+          message: "This attachment has been removed and is no longer available for download",
+          removalReason: attachment.removalReason,
+          removedAt: attachment.removedAt,
+        });
+      }
+
+      const filePath = path.join(UPLOAD_DIR, attachment.storedFilename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({
+          statusCode: 404,
+          error: "Not Found",
+          message: "File not found on storage",
+        });
+      }
+
+      res.setHeader("Content-Type", attachment.mimeType);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${encodeURIComponent(attachment.originalName)}"`
+      );
+      fs.createReadStream(filePath).pipe(res);
+    } catch (err) {
+      return res.status(500).json({
+        statusCode: 500,
+        error: "Internal Server Error",
+        message: "Failed to download attachment",
+      });
+    }
+  }
+);
+
+/**
+ * DELETE /api/attachments/:id
+ * Soft-remove an attachment with mandatory non-empty reason (AC-12, BR-11, BR-12)
+ */
+app.delete(
+  "/api/attachments/:id",
+  requireRequester as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+    const attachmentId = parseInt(req.params.id, 10);
+
+    if (isNaN(attachmentId)) {
+      return res.status(400).json({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "Invalid attachment ID",
+      });
+    }
+
+    // Validate removalReason (min 3 characters)
+    const removalReason =
+      typeof req.body?.removalReason === "string"
+        ? req.body.removalReason.trim()
+        : "";
+
+    if (!removalReason || removalReason.length < 3) {
+      return res.status(400).json({
+        statusCode: 400,
+        error: "Bad Request",
+        message: "Removal reason is required and must be at least 3 characters",
+      });
+    }
+
+    try {
+      const attachment = await prisma.attachment.findUnique({
+        where: { id: attachmentId },
+        include: { ticket: true },
+      });
+
+      if (!attachment) {
+        return res.status(404).json({
+          statusCode: 404,
+          error: "Not Found",
+          message: "Attachment not found",
+        });
+      }
+
+      // Ownership isolation check (BR-12)
+      if (attachment.ticket.requesterId !== req.requester!.id) {
+        return res.status(403).json({
+          statusCode: 403,
+          error: "Forbidden",
+          message: "You do not have permission to remove this attachment",
+        });
+      }
+
+      // Check if already removed
+      if (attachment.isRemoved) {
+        return res.status(400).json({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Attachment has already been removed",
+        });
+      }
+
+      // Soft removal: update database record without deleting file (BR-11)
+      const updated = await prisma.attachment.update({
+        where: { id: attachmentId },
+        data: {
+          isRemoved: true,
+          removedAt: new Date(),
+          removalReason,
+        },
+      });
+
+      return res.status(200).json({
+        id: updated.id,
+        isRemoved: true,
+        removedAt: updated.removedAt?.toISOString(),
+        removalReason: updated.removalReason,
+        message: "Attachment soft-removed successfully",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        statusCode: 500,
+        error: "Internal Server Error",
+        message: "Failed to remove attachment",
+      });
+    }
+  }
+);
+
 export default app;
+
 

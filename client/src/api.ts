@@ -1,4 +1,4 @@
-import { Category, RelatedSystem, Requester, SystemStatus, Ticket } from "./types.js";
+import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket } from "./types.js";
 export * from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -120,4 +120,108 @@ export async function fetchMyTickets(
 
   return res.json();
 }
+
+/**
+ * Fetch full details of an owned ticket.
+ */
+export async function fetchTicketDetail(
+  requesterId: number,
+  ticketId: number
+): Promise<Ticket> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}`, {
+    headers: {
+      "x-requester-id": String(requesterId),
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to fetch ticket (${res.status})`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Upload a new attachment to an existing owned ticket.
+ */
+export async function uploadTicketAttachment(
+  requesterId: number,
+  ticketId: number,
+  file: File
+): Promise<Attachment> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments`, {
+    method: "POST",
+    headers: {
+      "x-requester-id": String(requesterId),
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to upload attachment (${res.status})`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Soft-remove an attachment with mandatory removal reason.
+ */
+export async function removeAttachment(
+  requesterId: number,
+  attachmentId: number,
+  removalReason: string
+): Promise<Attachment> {
+  const res = await fetch(`${API_URL}/api/attachments/${attachmentId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "x-requester-id": String(requesterId),
+    },
+    body: JSON.stringify({ removalReason }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to remove attachment (${res.status})`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Download an active attachment file as a blob stream.
+ */
+export async function downloadAttachment(
+  requesterId: number,
+  attachmentId: number,
+  originalName: string
+): Promise<void> {
+  const res = await fetch(`${API_URL}/api/attachments/${attachmentId}/download`, {
+    headers: {
+      "x-requester-id": String(requesterId),
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to download file (${res.status})`);
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = originalName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 
