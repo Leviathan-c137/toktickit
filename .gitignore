@@ -9,6 +9,12 @@ dist/
 build/
 # prisma
 server/prisma/*.db
+# file uploads
+server/uploads/*
+!server/uploads/.gitkeep
 # logs & OS
 *.log
 .DS_Store
+# test output
+test-results/
+playwright-report/
