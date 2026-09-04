@@ -55,7 +55,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               <button
                 type="button"
                 className={`btn btn-sm ${
-                  activeTab === "tickets"
+                  activeTab === "tickets" || activeTab === "ticket-detail"
                     ? "btn-light text-dark fw-semibold"
                     : "btn-link text-white-50 text-decoration-none"
                 }`}

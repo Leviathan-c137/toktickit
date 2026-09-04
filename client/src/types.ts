@@ -51,6 +51,7 @@ export interface Ticket {
     id: number;
     fullName: string;
     email: string;
+    department?: string | null;
   };
   categoryId: number;
   category: {

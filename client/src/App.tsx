@@ -4,6 +4,7 @@ import { RequesterSelector } from "./components/RequesterSelector.js";
 import { AppHeader } from "./components/AppHeader.js";
 import { CreateTicket } from "./components/CreateTicket.js";
 import { MyTickets } from "./components/MyTickets.js";
+import { RequesterTicketDetail } from "./components/RequesterTicketDetail.js";
 import { checkSystem, Category } from "./api.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
@@ -11,6 +12,7 @@ type UiState = "idle" | "loading" | "success" | "error";
 function MainContent() {
   const { currentRequester } = useRequester();
   const [activeTab, setActiveTab] = useState<string>("tickets");
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [isChangingRequester, setIsChangingRequester] = useState<boolean>(false);
 
   // Lab 1 Status Check state
@@ -41,9 +43,13 @@ function MainContent() {
         activeTab={activeTab}
         setActiveTab={(tab) => {
           setActiveTab(tab);
+          setSelectedTicketId(null);
           setIsChangingRequester(false);
         }}
-        onChangeRequester={() => setIsChangingRequester(true)}
+        onChangeRequester={() => {
+          setIsChangingRequester(true);
+          setSelectedTicketId(null);
+        }}
       />
 
       <main className="flex-grow-1 py-4">
@@ -146,7 +152,18 @@ function MainContent() {
                 onSuccess={() => {
                   // Stay on success view rendered by CreateTicket
                 }}
-                onCancel={() => setActiveTab("tickets")}
+                onCancel={() => {
+                  setSelectedTicketId(null);
+                  setActiveTab("tickets");
+                }}
+              />
+            ) : activeTab === "ticket-detail" && selectedTicketId ? (
+              <RequesterTicketDetail
+                ticketId={selectedTicketId}
+                onBack={() => {
+                  setSelectedTicketId(null);
+                  setActiveTab("tickets");
+                }}
               />
             ) : (
               <div>
@@ -166,13 +183,19 @@ function MainContent() {
                   <div className="d-flex gap-2">
                     <button
                       className="btn btn-light btn-sm fw-semibold"
-                      onClick={() => setActiveTab("create-ticket")}
+                      onClick={() => {
+                        setSelectedTicketId(null);
+                        setActiveTab("create-ticket");
+                      }}
                     >
                       + Create New Ticket
                     </button>
                     <button
                       className="btn btn-outline-light btn-sm"
-                      onClick={() => setIsChangingRequester(true)}
+                      onClick={() => {
+                        setSelectedTicketId(null);
+                        setIsChangingRequester(true);
+                      }}
                     >
                       Switch Requester
                     </button>
@@ -181,10 +204,13 @@ function MainContent() {
 
                 {/* My Tickets View (Issue 4) */}
                 <MyTickets
-                  onCreateTicket={() => setActiveTab("create-ticket")}
+                  onCreateTicket={() => {
+                    setSelectedTicketId(null);
+                    setActiveTab("create-ticket");
+                  }}
                   onSelectTicket={(ticketId) => {
-                    // Ready for Ticket Detail view in Issue 5
-                    console.log("Selected ticket:", ticketId);
+                    setSelectedTicketId(ticketId);
+                    setActiveTab("ticket-detail");
                   }}
                 />
               </div>
