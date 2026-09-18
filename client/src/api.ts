@@ -224,4 +224,102 @@ export async function downloadAttachment(
   window.URL.revokeObjectURL(url);
 }
 
+// ---------------------------------------------------------------------------
+// Lab 3 Authentication & Public Comments APIs
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch public comments for a ticket.
+ */
+export async function fetchPublicComments(ticketId: number): Promise<PublicComment[]> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/comments`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch comments");
+  }
+  const data = await res.json();
+  return data.comments || [];
+}
+
+/**
+ * Append a public comment to a ticket.
+ */
+export async function createPublicComment(ticketId: number, content: string): Promise<PublicComment> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to post comment");
+  }
+  const data = await res.json();
+  return data.comment;
+}
+
+/**
+ * Record requester indication that problem appears resolved.
+ */
+export async function indicateProblemResolved(ticketId: number): Promise<{ message: string; status: string }> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/resolve-indication`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to record resolution indication");
+  }
+  return res.json();
+}
+
+/**
+ * Login user with credentials.
+ */
+export async function loginUser(email: string, password: string): Promise<{ user: User; token: string }> {
+  const res = await fetch(`${API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Invalid email or password");
+  }
+  return res.json();
+}
+
+/**
+ * Logout current user.
+ */
+export async function logoutUser(): Promise<void> {
+  await fetch(`${API_URL}/api/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+/**
+ * Fetch currently authenticated user context.
+ */
+export async function fetchCurrentUser(): Promise<User | null> {
+  const res = await fetch(`${API_URL}/api/auth/me`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    return null;
+  }
+  const data = await res.json();
+  return data.user;
+}
+
 

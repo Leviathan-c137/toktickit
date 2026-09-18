@@ -7,7 +7,7 @@ import { getPrisma } from "./prisma.js";
 import { upload, UPLOAD_DIR } from "./utils/upload.js";
 import { generateTicketNumber } from "./utils/ticketNumber.js";
 import { validateAttachment } from "./utils/attachmentValidator.js";
-import { comparePassword, hashPassword, generateToken, validatePasswordStrength, COOKIE_NAME } from "./utils/auth.js";
+import { comparePassword, hashPassword, generateToken, verifyToken, validatePasswordStrength, COOKIE_NAME } from "./utils/auth.js";
 import { authenticateToken, AuthenticatedUserRequest } from "./middleware/auth.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
@@ -36,6 +36,34 @@ export async function requireRequester(
   res: Response,
   next: NextFunction
 ): Promise<void> {
+  // 1. Check if token exists in cookie or Authorization header
+  let token: string | undefined;
+  if (req.cookies && req.cookies[COOKIE_NAME]) {
+    token = req.cookies[COOKIE_NAME];
+  }
+  const authHeader = req.headers["authorization"];
+  if (!token && authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.substring(7).trim();
+  }
+
+  if (token) {
+    const payload = verifyToken(token);
+    if (payload) {
+      try {
+        const user = await getPrisma().user.findUnique({
+          where: { id: payload.id },
+        });
+        if (user && user.isActive) {
+          req.requester = user;
+          (req as any).user = user;
+          next();
+          return;
+        }
+      } catch {}
+    }
+  }
+
+  // 2. Check x-requester-id header (for Lab 2 backward compatibility)
   const requesterIdHeader = req.headers["x-requester-id"];
 
   if (!requesterIdHeader) {
@@ -72,6 +100,7 @@ export async function requireRequester(
     }
 
     req.requester = requester;
+    (req as any).user = requester;
     next();
   } catch {
     res.status(500).json({
@@ -1148,6 +1177,193 @@ app.delete(
         statusCode: 500,
         error: "Internal Server Error",
         message: "Failed to remove attachment",
+      });
+    }
+  }
+);
+
+// ---------------------------------------------------------------------------
+// Lab 3 Issue 3 — Public Comments & Resolution Indication Endpoints
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/tickets/:id/comments
+ * Retrieve public comments for a ticket (visible to owner Requester, IT Staff, Admin)
+ */
+app.get(
+  "/api/tickets/:id/comments",
+  requireRequester as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = parseInt(req.params.id, 10);
+
+    if (isNaN(ticketId)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Invalid ticket ID" },
+      });
+    }
+
+    try {
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticket) {
+        return res.status(404).json({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+        });
+      }
+
+      // Requester role can only view comments on their own ticket
+      const userRole = (req as any).user?.role || "Requester";
+      if (userRole === "Requester" && ticket.requesterId !== req.requester!.id) {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "You do not have permission to view comments for this ticket" },
+        });
+      }
+
+      const comments = await prisma.publicComment.findMany({
+        where: { ticketId },
+        orderBy: { createdAt: "asc" },
+        include: {
+          author: {
+            select: { id: true, fullName: true, role: true, email: true },
+          },
+        },
+      });
+
+      return res.status(200).json({ comments });
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch comments" },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/tickets/:id/comments
+ * Append a public comment to a ticket (AC-07, FR-07, BR-04)
+ */
+app.post(
+  "/api/tickets/:id/comments",
+  requireRequester as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = parseInt(req.params.id, 10);
+
+    if (isNaN(ticketId)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Invalid ticket ID" },
+      });
+    }
+
+    const content = typeof req.body?.content === "string" ? req.body.content.trim() : "";
+    if (!content) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Comment content cannot be empty" },
+      });
+    }
+
+    if (content.length > 2000) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Comment content exceeds 2000 characters limit" },
+      });
+    }
+
+    try {
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticket) {
+        return res.status(404).json({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+        });
+      }
+
+      // Ownership isolation check for Requester
+      const userRole = (req as any).user?.role || "Requester";
+      if (userRole === "Requester" && ticket.requesterId !== req.requester!.id) {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "You do not have permission to comment on this ticket" },
+        });
+      }
+
+      const comment = await prisma.publicComment.create({
+        data: {
+          ticketId,
+          authorId: req.requester!.id,
+          content,
+        },
+        include: {
+          author: {
+            select: { id: true, fullName: true, role: true, email: true },
+          },
+        },
+      });
+
+      return res.status(201).json({ comment });
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to post comment" },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/tickets/:id/resolve-indication
+ * Requester indicates that the problem appears resolved (FR-06, BR-05, BR-06)
+ */
+app.post(
+  "/api/tickets/:id/resolve-indication",
+  requireRequester as any,
+  async (req: AuthenticatedRequest, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = parseInt(req.params.id, 10);
+
+    if (isNaN(ticketId)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Invalid ticket ID" },
+      });
+    }
+
+    try {
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticket) {
+        return res.status(404).json({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+        });
+      }
+
+      // Check ownership
+      if (ticket.requesterId !== req.requester!.id) {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "You do not have permission to update this ticket" },
+        });
+      }
+
+      // Record system public comment
+      await prisma.publicComment.create({
+        data: {
+          ticketId,
+          authorId: req.requester!.id,
+          content: "[Resolution Indication] Requester indicated that the reported problem appears resolved.",
+        },
+      });
+
+      return res.status(200).json({
+        message: "Resolution indication recorded successfully",
+        ticketId: ticket.id,
+        status: ticket.status,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to record resolution indication" },
       });
     }
   }
