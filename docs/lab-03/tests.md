@@ -10,9 +10,9 @@ The Lab 3 test suite provides comprehensive coverage across unit, API/integratio
 
 | Test ID | Type | Requirement / AC | What It Tests | Expected Result | Automated Test File Path | Status |
 |---|---|---|---|---|---|---|
-| **API-01** | API | AC-01, FR-01 | Valid user login | Returns 200 OK, sets session cookie, returns user role data | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| **API-02** | API | BR-01 | Inactive user login attempt | Returns 401 Unauthorized with generic error message | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| **API-03** | API | AC-02, BR-02 | Mandatory password change enforcement | Blocks API requests when `mustChangePassword == true` until password is updated | `server/tests/lab-03/auth.api.test.ts` | Planned |
+| **API-01** | API | AC-01, FR-01 | Valid user login | Returns 200 OK, sets session cookie, returns user role data | `server/tests/lab-03/auth.api.test.ts` | Pass |
+| **API-02** | API | BR-01 | Inactive user login attempt | Returns 401 Unauthorized with generic error message | `server/tests/lab-03/auth.api.test.ts` | Pass |
+| **API-03** | API | AC-02, BR-02 | Mandatory password change enforcement | Blocks API requests when `mustChangePassword == true` until password is updated | `server/tests/lab-03/auth.api.test.ts` | Pass |
 | **API-04** | API | AC-03, FR-05 | Requester data isolation | `/api/tickets` returns strictly tickets owned by authenticated user | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 | **API-05** | API | AC-04, BR-05 | Requester forbidden access to Internal Notes | Requests to `/api/staff/tickets/:id/notes` by Requester role return 403 Forbidden | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 | **API-06** | API | AC-05, FR-09 | IT Staff Queue query parameters | Supports search, category, priority, status filters, and sorting | `server/tests/lab-03/staff-queue.api.test.ts` | Planned |

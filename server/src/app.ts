@@ -1,18 +1,22 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import fs from "fs";
 import path from "path";
 import { getPrisma } from "./prisma.js";
 import { upload, UPLOAD_DIR } from "./utils/upload.js";
 import { generateTicketNumber } from "./utils/ticketNumber.js";
 import { validateAttachment } from "./utils/attachmentValidator.js";
+import { comparePassword, hashPassword, generateToken, validatePasswordStrength, COOKIE_NAME } from "./utils/auth.js";
+import { authenticateToken, AuthenticatedUserRequest } from "./middleware/auth.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
 export const app = express();
 
-app.use(cors()); // already wired: lets the Vite dev server call this API
+app.use(cors({ origin: true, credentials: true })); // lets client call API with credentials
 app.use(express.json());
+app.use(cookieParser());
 
 // ---------------------------------------------------------------------------
 // Lab 2 Requester Authentication Middleware (Simulated via x-requester-id)
@@ -54,7 +58,7 @@ export async function requireRequester(
   }
 
   try {
-    const requester = await getPrisma().requesterUser.findUnique({
+    const requester = await getPrisma().user.findUnique({
       where: { id: requesterId },
     });
 
@@ -108,8 +112,8 @@ app.get("/api/categories", async (_req: Request, res: Response) => {
 // GET /api/requesters/active — list active development requesters
 app.get("/api/requesters/active", async (_req: Request, res: Response) => {
   try {
-    const requesters = await getPrisma().requesterUser.findMany({
-      where: { isActive: true },
+    const requesters = await getPrisma().user.findMany({
+      where: { isActive: true, role: "Requester", email: { endsWith: "@kmutt.ac.th" } },
       orderBy: { id: "asc" },
       select: {
         id: true,
@@ -124,6 +128,210 @@ app.get("/api/requesters/active", async (_req: Request, res: Response) => {
       statusCode: 500,
       error: "Internal Server Error",
       message: "Failed to fetch active requesters",
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Lab 3 Issue 2 — Authentication Endpoints
+// ---------------------------------------------------------------------------
+
+// POST /api/auth/login
+app.post("/api/auth/login", async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400).json({
+      error: {
+        code: "BAD_REQUEST",
+        message: "Email and password are required",
+      },
+    });
+    return;
+  }
+
+  try {
+    const user = await getPrisma().user.findUnique({
+      where: { email: String(email).toLowerCase().trim() },
+    });
+
+    if (!user || !user.isActive) {
+      res.status(401).json({
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Invalid email or password",
+        },
+      });
+      return;
+    }
+
+    const isValid = await comparePassword(String(password), user.passwordHash);
+    if (!isValid) {
+      res.status(401).json({
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Invalid email or password",
+        },
+      });
+      return;
+    }
+
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      mustChangePassword: user.mustChangePassword,
+    });
+
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+        isActive: user.isActive,
+      },
+      token,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Login failed",
+      },
+    });
+  }
+});
+
+// POST /api/auth/logout
+app.post("/api/auth/logout", (_req: Request, res: Response) => {
+  res.clearCookie(COOKIE_NAME);
+  res.status(200).json({ message: "Successfully logged out" });
+});
+
+// GET /api/auth/me
+app.get("/api/auth/me", authenticateToken, (req: AuthenticatedUserRequest, res: Response) => {
+  const user = req.user!;
+  res.status(200).json({
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      mustChangePassword: user.mustChangePassword,
+      isActive: user.isActive,
+    },
+  });
+});
+
+// POST /api/auth/change-password
+app.post("/api/auth/change-password", authenticateToken, async (req: AuthenticatedUserRequest, res: Response) => {
+  const user = req.user!;
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+  if (!currentPassword || !newPassword || !confirmNewPassword) {
+    res.status(400).json({
+      error: {
+        code: "BAD_REQUEST",
+        message: "Current password, new password, and confirmation are required",
+      },
+    });
+    return;
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    res.status(400).json({
+      error: {
+        code: "PASSWORD_MISMATCH",
+        message: "New password and confirmation do not match",
+      },
+    });
+    return;
+  }
+
+  const isCurrentValid = await comparePassword(String(currentPassword), user.passwordHash);
+  if (!isCurrentValid) {
+    res.status(400).json({
+      error: {
+        code: "INVALID_CURRENT_PASSWORD",
+        message: "Current password is incorrect",
+      },
+    });
+    return;
+  }
+
+  if (currentPassword === newPassword) {
+    res.status(400).json({
+      error: {
+        code: "PASSWORD_SAME_AS_CURRENT",
+        message: "New password must be different from current password",
+      },
+    });
+    return;
+  }
+
+  const strength = validatePasswordStrength(String(newPassword));
+  if (!strength.isValid) {
+    res.status(400).json({
+      error: {
+        code: "WEAK_PASSWORD",
+        message: strength.message || "Password does not meet complexity requirements",
+      },
+    });
+    return;
+  }
+
+  try {
+    const newHash = await hashPassword(String(newPassword));
+    const updatedUser = await getPrisma().user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: newHash,
+        mustChangePassword: false,
+      },
+    });
+
+    const token = generateToken({
+      id: updatedUser.id,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      mustChangePassword: false,
+    });
+
+    res.cookie(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      message: "Password changed successfully",
+      mustChangePassword: false,
+      user: {
+        id: updatedUser.id,
+        fullName: updatedUser.fullName,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        mustChangePassword: false,
+        isActive: updatedUser.isActive,
+      },
+      token,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to update password",
+      },
     });
   }
 });
