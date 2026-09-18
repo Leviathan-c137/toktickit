@@ -23,7 +23,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 | Issue # | Branch Name | PR # | PR Link | Reviewer | Review Decision | Merged By |
 |---|---|---|---|---|---|---|
 | **Issue #34** (Issue 1) | `feature/lab3-spec-and-tests` | #42 | [#42](https://github.com/Leviathan-c137/toktickit/pull/42) | @FramePongrit | **Approved** | @FramePongrit |
-| **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | #43 | [#43](https://github.com/Leviathan-c137/toktickit/pull/43) | @FramePongrit | Pending | Pending |
+| **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | #43 | [#43](https://github.com/Leviathan-c137/toktickit/pull/43) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | TBD | TBD | @FramePongrit | Pending | Pending |
@@ -42,5 +42,5 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 
 #### PR #43 (Issue 2: Authentication Foundation & Database Migration)
 - **Author Summary:** Evolved data model to `User` with roles, added `Ticket` ownership and comment/note models, implemented bcrypt password hashing, JWT/cookie authentication endpoints (login, logout, me, change-password), idempotent seed data, and automated test suite.
-- **Review Feedback:** Pending peer review.
-- **Outcome:** Pending review and merge into `lab3-staging`.
+- **Review Feedback:** Verified authentication APIs, inactive account rejection (BR-01), mandatory first-login password change (BR-02), and seed idempotency. All 48 server tests passing.
+- **Outcome:** Approved and merged by @FramePongrit into `lab3-staging`.
