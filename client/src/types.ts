@@ -9,6 +9,31 @@ export type TicketStatus =
   | "Closed"
   | "Cancelled";
 
+export type Role = "Requester" | "ITStaff" | "Administrator";
+
+export interface User {
+  id: number;
+  fullName: string;
+  email: string;
+  role: Role;
+  mustChangePassword: boolean;
+  department?: string | null;
+  isActive: boolean;
+}
+
+export interface PublicComment {
+  id: number;
+  ticketId: number;
+  author: {
+    id: number;
+    fullName: string;
+    role: Role;
+    email?: string;
+  };
+  content: string;
+  createdAt: string;
+}
+
 export interface Requester {
   id: number;
   fullName: string;
