@@ -6,6 +6,7 @@ import { CreateTicket } from "./components/CreateTicket.js";
 import { MyTickets } from "./components/MyTickets.js";
 import { RequesterTicketDetail } from "./components/RequesterTicketDetail.js";
 import { StaffTicketQueue } from "./components/StaffTicketQueue.js";
+import { StaffTicketDetail } from "./components/StaffTicketDetail.js";
 import { checkSystem, Category } from "./api.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
@@ -162,7 +163,15 @@ function MainContent() {
               <StaffTicketQueue
                 onSelectTicket={(ticketId) => {
                   setSelectedTicketId(ticketId);
-                  setActiveTab("ticket-detail");
+                  setActiveTab("staff-ticket-detail");
+                }}
+              />
+            ) : activeTab === "staff-ticket-detail" && selectedTicketId ? (
+              <StaffTicketDetail
+                ticketId={selectedTicketId}
+                onBack={() => {
+                  setSelectedTicketId(null);
+                  setActiveTab("staff-queue");
                 }}
               />
             ) : activeTab === "ticket-detail" && selectedTicketId ? (

@@ -204,3 +204,32 @@ export interface StaffQueueFilters {
   limit?: number;
 }
 
+export interface InternalNote {
+  id: number;
+  ticketId: number;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    fullName: string;
+    email?: string;
+    role: Role;
+  };
+}
+
+export interface StaffUser {
+  id: number;
+  fullName: string;
+  email: string;
+  role: Role;
+  department?: string | null;
+}
+
+export interface StaffTicketDetailData extends StaffTicketItem {
+  description: string;
+  attachments: Attachment[];
+  publicComments?: PublicComment[];
+  internalNotes?: InternalNote[];
+}
+
+

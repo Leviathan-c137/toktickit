@@ -360,5 +360,135 @@ export async function fetchStaffTicketQueue(
   return res.json();
 }
 
+/**
+ * Fetch complete ticket detail for IT Staff view (FR-10, FR-11, FR-12).
+ */
+export async function fetchStaffTicketDetail(
+  id: number
+): Promise<import("./types.js").StaffTicketDetailData> {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${id}`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || `Failed to fetch ticket (${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * Claim or reassign ticket ownership (API-07, FR-10, BR-07).
+ */
+export async function updateTicketOwner(
+  id: number,
+  ownerId: number | null
+): Promise<{ ticketId: number; owner: any }> {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${id}/owner`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ ownerId }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to update ticket owner");
+  }
+  return res.json();
+}
+
+/**
+ * Update IT Priority independently (FR-11, BR-08).
+ */
+export async function updateTicketPriority(
+  id: number,
+  itPriority: import("./types.js").Priority
+): Promise<{ ticketId: number; itPriority: import("./types.js").Priority }> {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${id}/priority`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ itPriority }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to update IT priority");
+  }
+  return res.json();
+}
+
+/**
+ * Transition ticket status through permitted workflow states (FR-12, BR-09).
+ */
+export async function updateTicketStatus(
+  id: number,
+  status: import("./types.js").TicketStatus
+): Promise<{ ticketId: number; status: import("./types.js").TicketStatus }> {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to update ticket status");
+  }
+  return res.json();
+}
+
+/**
+ * Fetch private Internal Notes for a ticket (API-09, FR-08, BR-05).
+ */
+export async function fetchInternalNotes(
+  ticketId: number
+): Promise<import("./types.js").InternalNote[]> {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${ticketId}/notes`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch internal notes");
+  }
+  const data = await res.json();
+  return data.notes;
+}
+
+/**
+ * Post a private Internal Note (API-09, FR-08, BR-05).
+ */
+export async function createInternalNote(
+  ticketId: number,
+  content: string
+): Promise<import("./types.js").InternalNote> {
+  const res = await fetch(`${API_URL}/api/staff/tickets/${ticketId}/notes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to post internal note");
+  }
+  const data = await res.json();
+  return data.note;
+}
+
+/**
+ * Fetch active staff users for assignment dropdown (BR-07).
+ */
+export async function fetchActiveStaffUsers(): Promise<import("./types.js").StaffUser[]> {
+  const res = await fetch(`${API_URL}/api/staff/users`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch staff users");
+  }
+  const data = await res.json();
+  return data.users;
+}
+
+
 
 

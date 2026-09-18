@@ -55,4 +55,10 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 - **Review Feedback:** Verified queue search/filtering/sorting/pagination, role-based protection (Requester 403), Zen Green UI components, and test coverage. All 69 server tests and 29 client tests passing.
 - **Outcome:** Approved and merged by @FramePongrit into `lab3-staging`.
 
+#### PR for Issue 5: IT Staff Ticket Detail & Internal Notes (Issue #38)
+- **Author Summary:** Implemented IT Staff Ticket Detail view (`StaffTicketDetail.tsx`) and confidential Internal Notes (`InternalNotes.tsx`). Added backend endpoints: `GET /api/staff/tickets/:id`, `PATCH /api/staff/tickets/:id/owner` (BR-07), `PATCH /api/staff/tickets/:id/priority` (BR-08), `PATCH /api/staff/tickets/:id/status` (BR-09 state machine), `GET/POST /api/staff/tickets/:id/notes` (API-05, BR-05 Requester 403 forbidden), and `GET /api/staff/users`. Designed two-column layout with Zen Green primary styles and warm amber tokens for confidential internal notes.
+- **Review Feedback:** Pending peer review from @FramePongrit.
+- **Outcome:** PR opened targeting `lab3-staging`. Pending review.
+
+
 
