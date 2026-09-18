@@ -27,7 +27,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 | **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | #44 | [#44](https://github.com/Leviathan-c137/toktickit/pull/44) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | #45 | [#45](https://github.com/Leviathan-c137/toktickit/pull/45) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | #46 | [#46](https://github.com/Leviathan-c137/toktickit/pull/46) | @FramePongrit | **Approved** | @FramePongrit |
-| **Issue #39** (Issue 6) | `feature/lab3-user-admin` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Issue #39** (Issue 6) | `feature/lab3-user-admin` | #47 | [#47](https://github.com/Leviathan-c137/toktickit/pull/47) | @FramePongrit | Pending | Pending |
 | **Issue #40** (Issue 7) | `feature/lab3-e2e-and-release` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Release** | `lab3-staging` | TBD | TBD | @FramePongrit | Pending | Pending |
 
@@ -60,7 +60,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 - **Review Feedback:** Verified dual-column layout, ownership assignment, IT priority isolation, state transitions, and private notes. All 90 server tests and 34 client tests passing.
 - **Outcome:** Approved and merged by @FramePongrit into `lab3-staging`.
 
-#### PR for Issue 6: Administrator User Management (Issue #39)
+#### PR #47 (Issue 6: Administrator User Management)
 - **Author Summary:** Implemented Administrator User Management REST APIs (`GET /api/admin/users`, `POST /api/admin/users`, `PATCH /api/admin/users/:id`, `POST /api/admin/users/:id/reset-password`) and Zen Green UI component (`UserManagement.tsx`). Enforces Admin safety guardrails: Admin self-deactivation prevention (`SELF_DEACTIVATION_PROHIBITED`, BR-12), Admin self-demotion prevention (`SELF_DEMOTION_PROHIBITED`, BR-12), and protection of the last active Administrator (`LAST_ADMIN_PROTECTED`, BR-13). Built comprehensive modals for user creation, editing, and password reset.
 - **Review Feedback:** Pending peer review from @FramePongrit.
 - **Outcome:** PR opened targeting `lab3-staging`. Pending review.
