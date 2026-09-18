@@ -5,8 +5,10 @@ export type TicketStatus =
   | "Open"
   | "InProgress"
   | "Pending"
+  | "WaitingForRequester"
   | "Resolved"
   | "Closed"
+  | "Reopened"
   | "Cancelled";
 
 export type Role = "Requester" | "ITStaff" | "Administrator";
@@ -141,5 +143,64 @@ export interface TicketFilters {
 export interface SystemStatus {
   online: boolean;
   categories: Category[];
+}
+
+export interface StaffTicketItem {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  requestedPriority: Priority;
+  itPriority: Priority;
+  status: TicketStatus;
+  createdAt: string;
+  updatedAt: string;
+  requester: {
+    id: number;
+    fullName: string;
+    email: string;
+    department?: string | null;
+  };
+  owner: {
+    id: number;
+    fullName: string;
+    email: string;
+  } | null;
+  category: {
+    id: number;
+    name: string;
+  };
+  relatedSystem: {
+    id: number;
+    name: string;
+  };
+  _count?: {
+    attachments: number;
+    publicComments: number;
+    internalNotes: number;
+  };
+}
+
+export interface StaffTicketPagination {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface PaginatedStaffTickets {
+  tickets: StaffTicketItem[];
+  pagination: StaffTicketPagination;
+}
+
+export interface StaffQueueFilters {
+  search?: string;
+  categoryId?: number | string;
+  status?: string;
+  itPriority?: string;
+  ownerId?: string | number;
+  sortBy?: "createdAt" | "ticketNumber" | "updatedAt" | "itPriority";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
 }
 
