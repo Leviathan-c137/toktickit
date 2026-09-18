@@ -25,7 +25,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 | **Issue #34** (Issue 1) | `feature/lab3-spec-and-tests` | #42 | [#42](https://github.com/Leviathan-c137/toktickit/pull/42) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | #43 | [#43](https://github.com/Leviathan-c137/toktickit/pull/43) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | #44 | [#44](https://github.com/Leviathan-c137/toktickit/pull/44) | @FramePongrit | **Approved** | @FramePongrit |
-| **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | #45 | [#45](https://github.com/Leviathan-c137/toktickit/pull/45) | @FramePongrit | Under Review | Pending |
+| **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | #45 | [#45](https://github.com/Leviathan-c137/toktickit/pull/45) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Issue #39** (Issue 6) | `feature/lab3-user-admin` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Issue #40** (Issue 7) | `feature/lab3-e2e-and-release` | TBD | TBD | @FramePongrit | Pending | Pending |
@@ -52,6 +52,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 
 #### PR #45 (Issue 4: IT Staff Ticket Queue)
 - **Author Summary:** Implemented `GET /api/staff/tickets` with search, multi-field filtering (category, status, IT priority, owner), multi-column sorting, and pagination. Built `StaffTicketQueue.tsx` with Zen Green styling, real-time debounced search, badges, empty/no-results states, and pagination controls.
-- **Review Feedback:** Awaiting review from peer reviewer @FramePongrit. All 69 server tests and 29 client tests passing with zero regressions.
-- **Outcome:** Open under review by @FramePongrit.
+- **Review Feedback:** Verified queue search/filtering/sorting/pagination, role-based protection (Requester 403), Zen Green UI components, and test coverage. All 69 server tests and 29 client tests passing.
+- **Outcome:** Approved and merged by @FramePongrit into `lab3-staging`.
+
 
