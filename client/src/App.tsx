@@ -7,6 +7,7 @@ import { MyTickets } from "./components/MyTickets.js";
 import { RequesterTicketDetail } from "./components/RequesterTicketDetail.js";
 import { StaffTicketQueue } from "./components/StaffTicketQueue.js";
 import { StaffTicketDetail } from "./components/StaffTicketDetail.js";
+import { UserManagement } from "./components/UserManagement.js";
 import { checkSystem, Category } from "./api.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
@@ -177,6 +178,13 @@ function MainContent() {
             ) : activeTab === "ticket-detail" && selectedTicketId ? (
               <RequesterTicketDetail
                 ticketId={selectedTicketId}
+                onBack={() => {
+                  setSelectedTicketId(null);
+                  setActiveTab("tickets");
+                }}
+              />
+            ) : activeTab === "user-management" ? (
+              <UserManagement
                 onBack={() => {
                   setSelectedTicketId(null);
                   setActiveTab("tickets");
