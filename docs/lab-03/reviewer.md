@@ -22,20 +22,20 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 
 | Issue # | Branch Name | PR # | PR Link | Reviewer | Review Decision | Merged By |
 |---|---|---|---|---|---|---|
-| **Issue #34** (Issue 1) | `feature/lab3-spec-and-tests` | #42 | [#42](https://github.com/Leviathan-c137/toktickit/pull/42) | @Sxr1n | Pending | Pending |
-| **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | TBD | TBD | @narakosi-dev | Pending | Pending |
-| **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | TBD | TBD | @Sxr1n | Pending | Pending |
-| **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | TBD | TBD | @narakosi-dev | Pending | Pending |
-| **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | TBD | TBD | @Sxr1n | Pending | Pending |
-| **Issue #39** (Issue 6) | `feature/lab3-user-admin` | TBD | TBD | @narakosi-dev | Pending | Pending |
-| **Issue #40** (Issue 7) | `feature/lab3-e2e-and-release` | TBD | TBD | @Sxr1n | Pending | Pending |
-| **Release** | `lab3-staging` | TBD | TBD | @Sxr1n | Pending | Pending |
+| **Issue #34** (Issue 1) | `feature/lab3-spec-and-tests` | #42 | [#42](https://github.com/Leviathan-c137/toktickit/pull/42) | @FramePongrit | **Approved** | @FramePongrit |
+| **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Issue #39** (Issue 6) | `feature/lab3-user-admin` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Issue #40** (Issue 7) | `feature/lab3-e2e-and-release` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Release** | `lab3-staging` | TBD | TBD | @FramePongrit | Pending | Pending |
 
 ---
 
 ### Detailed Evaluation of Author PRs
 
-#### PR TBD (Issue 1: Sprint 3 Engineering Specification and Test Plan)
+#### PR #42 (Issue 1: Sprint 3 Engineering Specification and Test Plan)
 - **Author Summary:** Defined the Sprint 3 engineering contract across `specification.md`, `ui-spec.md`, `api-spec.md`, `tests.md`, `reviewer.md`, and `ai-use.md`. Enforced business rules (BR-01 through BR-14) and Acceptance Criteria (AC-01 through AC-11).
 - **Review Feedback:** Verified that authentication, queue filters, public comments, internal notes, and admin safety rules matched stakeholder specifications.
-- **Outcome:** Pending review and merge into `lab3-staging`.
+- **Outcome:** Approved and merged by @FramePongrit into `lab3-staging`.
