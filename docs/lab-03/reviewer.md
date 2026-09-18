@@ -26,7 +26,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 | **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | #43 | [#43](https://github.com/Leviathan-c137/toktickit/pull/43) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | #44 | [#44](https://github.com/Leviathan-c137/toktickit/pull/44) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | #45 | [#45](https://github.com/Leviathan-c137/toktickit/pull/45) | @FramePongrit | **Approved** | @FramePongrit |
-| **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | #46 | [#46](https://github.com/Leviathan-c137/toktickit/pull/46) | @FramePongrit | Pending | Pending |
 | **Issue #39** (Issue 6) | `feature/lab3-user-admin` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Issue #40** (Issue 7) | `feature/lab3-e2e-and-release` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Release** | `lab3-staging` | TBD | TBD | @FramePongrit | Pending | Pending |
@@ -55,7 +55,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 - **Review Feedback:** Verified queue search/filtering/sorting/pagination, role-based protection (Requester 403), Zen Green UI components, and test coverage. All 69 server tests and 29 client tests passing.
 - **Outcome:** Approved and merged by @FramePongrit into `lab3-staging`.
 
-#### PR for Issue 5: IT Staff Ticket Detail & Internal Notes (Issue #38)
+#### PR #46 (Issue 5: IT Staff Ticket Detail & Internal Notes)
 - **Author Summary:** Implemented IT Staff Ticket Detail view (`StaffTicketDetail.tsx`) and confidential Internal Notes (`InternalNotes.tsx`). Added backend endpoints: `GET /api/staff/tickets/:id`, `PATCH /api/staff/tickets/:id/owner` (BR-07), `PATCH /api/staff/tickets/:id/priority` (BR-08), `PATCH /api/staff/tickets/:id/status` (BR-09 state machine), `GET/POST /api/staff/tickets/:id/notes` (API-05, BR-05 Requester 403 forbidden), and `GET /api/staff/users`. Designed two-column layout with Zen Green primary styles and warm amber tokens for confidential internal notes.
 - **Review Feedback:** Pending peer review from @FramePongrit.
 - **Outcome:** PR opened targeting `lab3-staging`. Pending review.
