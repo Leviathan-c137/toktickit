@@ -22,7 +22,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 
 | Issue # | Branch Name | PR # | PR Link | Reviewer | Review Decision | Merged By |
 |---|---|---|---|---|---|---|
-| **Issue #34** (Issue 1) | `feature/lab3-spec-and-tests` | TBD | TBD | @Sxr1n | Pending | Pending |
+| **Issue #34** (Issue 1) | `feature/lab3-spec-and-tests` | #42 | [#42](https://github.com/Leviathan-c137/toktickit/pull/42) | @Sxr1n | Pending | Pending |
 | **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | TBD | TBD | @narakosi-dev | Pending | Pending |
 | **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | TBD | TBD | @Sxr1n | Pending | Pending |
 | **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | TBD | TBD | @narakosi-dev | Pending | Pending |
