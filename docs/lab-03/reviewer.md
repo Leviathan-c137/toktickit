@@ -1,0 +1,41 @@
+# Lab 3 — Peer Review Record
+
+**Course:** CPE 334 Software Engineering Laboratory  
+**Sprint:** Lab 3 — TokTickIT Users, Roles, IT Staff Ticketing, and Admin Screens  
+**Repository Author:** @Leviathan-c137 (https://github.com/Leviathan-c137/toktickit)  
+**Primary Reviewers & Collaborators:** @Sxr1n (https://github.com/Sxr1n), @narakosi-dev (https://github.com/narakosi-dev)  
+
+---
+
+## 1. Peer Review Process & Rules Adherence
+
+Throughout the Lab 3 sprint, our team strictly adheres to the engineering workflow guidelines:
+1. **Rule 1 — Reviewer Clicks Merge:** The PR author *never* merges their own Pull Request. The assigned peer reviewer evaluates changes, writes a review summary, and clicks **Merge pull request**.
+2. **Rule 2 — Reply to Comments:** Any review questions or comments are answered and resolved before merging.
+3. **Rule 3 — Link PR to Issue:** Every Pull Request is explicitly linked to its corresponding GitHub Issue.
+4. **Rule 4 — Kanban Flow:** Every issue transitions through Kanban stages: `Backlog` -> `Specified` -> `Started` -> `PR Review` -> `Done`.
+5. **Rule 5 — Branching Strategy:** All feature branches (`feature/lab3-...`) merge into `lab3-staging`. The final release is merged from `lab3-staging` into `main`.
+
+---
+
+## 2. PRs Created for Lab 3
+
+| Issue # | Branch Name | PR # | PR Link | Reviewer | Review Decision | Merged By |
+|---|---|---|---|---|---|---|
+| **Issue #34** (Issue 1) | `feature/lab3-spec-and-tests` | TBD | TBD | @Sxr1n | Pending | Pending |
+| **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | TBD | TBD | @narakosi-dev | Pending | Pending |
+| **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | TBD | TBD | @Sxr1n | Pending | Pending |
+| **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | TBD | TBD | @narakosi-dev | Pending | Pending |
+| **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | TBD | TBD | @Sxr1n | Pending | Pending |
+| **Issue #39** (Issue 6) | `feature/lab3-user-admin` | TBD | TBD | @narakosi-dev | Pending | Pending |
+| **Issue #40** (Issue 7) | `feature/lab3-e2e-and-release` | TBD | TBD | @Sxr1n | Pending | Pending |
+| **Release** | `lab3-staging` | TBD | TBD | @Sxr1n | Pending | Pending |
+
+---
+
+### Detailed Evaluation of Author PRs
+
+#### PR TBD (Issue 1: Sprint 3 Engineering Specification and Test Plan)
+- **Author Summary:** Defined the Sprint 3 engineering contract across `specification.md`, `ui-spec.md`, `api-spec.md`, `tests.md`, `reviewer.md`, and `ai-use.md`. Enforced business rules (BR-01 through BR-14) and Acceptance Criteria (AC-01 through AC-11).
+- **Review Feedback:** Verified that authentication, queue filters, public comments, internal notes, and admin safety rules matched stakeholder specifications.
+- **Outcome:** Pending review and merge into `lab3-staging`.
