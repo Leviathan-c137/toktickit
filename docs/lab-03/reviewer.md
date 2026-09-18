@@ -24,7 +24,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 |---|---|---|---|---|---|---|
 | **Issue #34** (Issue 1) | `feature/lab3-spec-and-tests` | #42 | [#42](https://github.com/Leviathan-c137/toktickit/pull/42) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #35** (Issue 2) | `feature/lab3-auth-foundation` | #43 | [#43](https://github.com/Leviathan-c137/toktickit/pull/43) | @FramePongrit | **Approved** | @FramePongrit |
-| **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | #44 | [#44](https://github.com/Leviathan-c137/toktickit/pull/44) | @FramePongrit | Pending | Pending |
+| **Issue #36** (Issue 3) | `feature/lab3-requester-regression` | #44 | [#44](https://github.com/Leviathan-c137/toktickit/pull/44) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | TBD | TBD | @FramePongrit | Pending | Pending |
 | **Issue #39** (Issue 6) | `feature/lab3-user-admin` | TBD | TBD | @FramePongrit | Pending | Pending |
@@ -47,5 +47,5 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 
 #### PR #44 (Issue 3: Requester Regression & Public Comments)
 - **Author Summary:** Implemented Public Comments component and REST endpoints, added Requester resolution indication workflow, enforced Requester data ownership isolation, and established `AuthContext`.
-- **Review Feedback:** Pending peer review.
-- **Outcome:** Pending review and merge into `lab3-staging`.
+- **Review Feedback:** Verified Public Comments thread, character counter, resolution indication, and data isolation. All 57 server tests and 24 client tests passing.
+- **Outcome:** Approved and merged by @FramePongrit into `lab3-staging`.
