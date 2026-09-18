@@ -8,7 +8,8 @@ import { upload, UPLOAD_DIR } from "./utils/upload.js";
 import { generateTicketNumber } from "./utils/ticketNumber.js";
 import { validateAttachment } from "./utils/attachmentValidator.js";
 import { comparePassword, hashPassword, generateToken, verifyToken, validatePasswordStrength, COOKIE_NAME } from "./utils/auth.js";
-import { authenticateToken, AuthenticatedUserRequest } from "./middleware/auth.js";
+import { authenticateToken, AuthenticatedUserRequest, requireRole, requirePasswordChanged } from "./middleware/auth.js";
+import { Role, Priority, TicketStatus } from "@prisma/client";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -1364,6 +1365,159 @@ app.post(
     } catch (err) {
       return res.status(500).json({
         error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to record resolution indication" },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/staff/tickets
+ * IT Staff Ticket Queue with search, multi-field filtering, sorting, and pagination.
+ * Restricted to ITStaff and Administrator roles (FR-09, AC-05, BR-07).
+ */
+app.get(
+  "/api/staff/tickets",
+  authenticateToken,
+  requireRole(Role.ITStaff, Role.Administrator),
+  requirePasswordChanged,
+  async (req: AuthenticatedUserRequest, res: Response) => {
+    const prisma = getPrisma();
+    try {
+      const {
+        search,
+        categoryId,
+        status,
+        itPriority,
+        ownerId,
+        sortBy = "createdAt",
+        sortOrder = "desc",
+      } = req.query;
+
+      // 1. Pagination parameters
+      let page = 1;
+      if (req.query.page !== undefined) {
+        const parsedPage = parseInt(req.query.page as string, 10);
+        if (isNaN(parsedPage) || parsedPage < 1) {
+          return res.status(400).json({
+            error: { code: "BAD_REQUEST", message: "Page must be a positive integer" },
+          });
+        }
+        page = parsedPage;
+      }
+
+      let limit = 10;
+      if (req.query.limit !== undefined) {
+        const parsedLimit = parseInt(req.query.limit as string, 10);
+        if (isNaN(parsedLimit) || parsedLimit < 1) {
+          return res.status(400).json({
+            error: { code: "BAD_REQUEST", message: "Limit must be a positive integer" },
+          });
+        }
+        limit = Math.min(parsedLimit, 50);
+      }
+
+      // 2. Build where filter
+      const where: any = {};
+
+      // Search across ticketNumber and summary (case-insensitive substring)
+      if (search && typeof search === "string" && search.trim() !== "") {
+        const trimmedSearch = search.trim();
+        where.OR = [
+          { ticketNumber: { contains: trimmedSearch, mode: "insensitive" } },
+          { summary: { contains: trimmedSearch, mode: "insensitive" } },
+        ];
+      }
+
+      // Category filter
+      if (categoryId !== undefined && categoryId !== "" && categoryId !== "All") {
+        const parsedCatId = parseInt(categoryId as string, 10);
+        if (!isNaN(parsedCatId)) {
+          where.categoryId = parsedCatId;
+        }
+      }
+
+      // Status filter
+      if (status && typeof status === "string" && status !== "All") {
+        where.status = status;
+      }
+
+      // IT Priority filter
+      if (itPriority && typeof itPriority === "string" && itPriority !== "All") {
+        where.itPriority = itPriority;
+      }
+
+      // Owner filter: "unassigned", "me", or specific user id number
+      if (ownerId !== undefined && ownerId !== "" && ownerId !== "All") {
+        if (ownerId === "unassigned") {
+          where.ownerId = null;
+        } else if (ownerId === "me") {
+          where.ownerId = req.user!.id;
+        } else {
+          const parsedOwnerId = parseInt(ownerId as string, 10);
+          if (!isNaN(parsedOwnerId)) {
+            where.ownerId = parsedOwnerId;
+          }
+        }
+      }
+
+      // 3. Sorting
+      const allowedSortFields = ["createdAt", "ticketNumber", "updatedAt", "itPriority"];
+      const sortField = typeof sortBy === "string" && allowedSortFields.includes(sortBy)
+        ? sortBy
+        : "createdAt";
+      const order = sortOrder === "asc" ? "asc" : "desc";
+
+      const [tickets, totalCount] = await Promise.all([
+        prisma.ticket.findMany({
+          where,
+          orderBy: { [sortField]: order },
+          skip: (page - 1) * limit,
+          take: limit,
+          select: {
+            id: true,
+            ticketNumber: true,
+            summary: true,
+            requestedPriority: true,
+            itPriority: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            requester: {
+              select: { id: true, fullName: true, email: true, department: true },
+            },
+            owner: {
+              select: { id: true, fullName: true, email: true },
+            },
+            category: {
+              select: { id: true, name: true },
+            },
+            relatedSystem: {
+              select: { id: true, name: true },
+            },
+            _count: {
+              select: {
+                attachments: true,
+                publicComments: true,
+                internalNotes: true,
+              },
+            },
+          },
+        }),
+        prisma.ticket.count({ where }),
+      ]);
+
+      return res.status(200).json({
+        tickets,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit) || 1,
+        },
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve ticket queue" },
       });
     }
   }

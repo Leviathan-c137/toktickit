@@ -1,4 +1,4 @@
-import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket } from "./types.js";
+import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket, User, PublicComment } from "./types.js";
 export * from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -321,5 +321,44 @@ export async function fetchCurrentUser(): Promise<User | null> {
   const data = await res.json();
   return data.user;
 }
+
+/**
+ * Fetch IT Staff Ticket Queue with search, multi-field filters, sorting, and pagination (FR-09, AC-05).
+ */
+export async function fetchStaffTicketQueue(
+  filters?: import("./types.js").StaffQueueFilters
+): Promise<import("./types.js").PaginatedStaffTickets> {
+  const params = new URLSearchParams();
+  if (filters?.search) params.append("search", filters.search);
+  if (filters?.categoryId !== undefined && filters.categoryId !== "" && filters.categoryId !== "All") {
+    params.append("categoryId", String(filters.categoryId));
+  }
+  if (filters?.status && filters.status !== "All") {
+    params.append("status", filters.status);
+  }
+  if (filters?.itPriority && filters.itPriority !== "All") {
+    params.append("itPriority", filters.itPriority);
+  }
+  if (filters?.ownerId !== undefined && filters.ownerId !== "" && filters.ownerId !== "All") {
+    params.append("ownerId", String(filters.ownerId));
+  }
+  if (filters?.sortBy) params.append("sortBy", filters.sortBy);
+  if (filters?.sortOrder) params.append("sortOrder", filters.sortOrder);
+  if (filters?.page) params.append("page", String(filters.page));
+  if (filters?.limit) params.append("limit", String(filters.limit));
+
+  const queryString = params.toString() ? `?${params.toString()}` : "";
+  const res = await fetch(`${API_URL}/api/staff/tickets${queryString}`, {
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || `Failed to fetch ticket queue (${res.status})`);
+  }
+
+  return res.json();
+}
+
 
 

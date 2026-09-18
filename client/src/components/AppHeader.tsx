@@ -81,6 +81,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               <button
                 type="button"
                 className={`btn btn-sm ${
+                  activeTab === "staff-queue"
+                    ? "btn-light text-dark fw-semibold"
+                    : "btn-link text-white-50 text-decoration-none"
+                }`}
+                onClick={() => setActiveTab("staff-queue")}
+              >
+                Ticket Queue
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                type="button"
+                className={`btn btn-sm ${
                   activeTab === "system-check"
                     ? "btn-light text-dark fw-semibold"
                     : "btn-link text-white-50 text-decoration-none"

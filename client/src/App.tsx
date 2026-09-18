@@ -5,6 +5,7 @@ import { AppHeader } from "./components/AppHeader.js";
 import { CreateTicket } from "./components/CreateTicket.js";
 import { MyTickets } from "./components/MyTickets.js";
 import { RequesterTicketDetail } from "./components/RequesterTicketDetail.js";
+import { StaffTicketQueue } from "./components/StaffTicketQueue.js";
 import { checkSystem, Category } from "./api.js";
 
 type UiState = "idle" | "loading" | "success" | "error";
@@ -155,6 +156,13 @@ function MainContent() {
                 onCancel={() => {
                   setSelectedTicketId(null);
                   setActiveTab("tickets");
+                }}
+              />
+            ) : activeTab === "staff-queue" ? (
+              <StaffTicketQueue
+                onSelectTicket={(ticketId) => {
+                  setSelectedTicketId(ticketId);
+                  setActiveTab("ticket-detail");
                 }}
               />
             ) : activeTab === "ticket-detail" && selectedTicketId ? (
