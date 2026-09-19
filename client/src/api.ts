@@ -323,6 +323,27 @@ export async function fetchCurrentUser(): Promise<User | null> {
 }
 
 /**
+ * Change current user password (AC-02, BR-02).
+ */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmNewPassword: string
+): Promise<{ message: string; user: User }> {
+  const res = await fetch(`${API_URL}/api/auth/change-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to change password");
+  }
+  return res.json();
+}
+
+/**
  * Fetch IT Staff Ticket Queue with search, multi-field filters, sorting, and pagination (FR-09, AC-05).
  */
 export async function fetchStaffTicketQueue(
