@@ -5,8 +5,10 @@ import {
   uploadTicketAttachment,
   removeAttachment,
   downloadAttachment,
+  indicateProblemResolved,
 } from "../api.js";
 import { useRequester } from "../context/RequesterContext.js";
+import { PublicComments } from "./PublicComments.js";
 
 interface RequesterTicketDetailProps {
   ticketId: number;
@@ -40,6 +42,10 @@ export const RequesterTicketDetail: React.FC<RequesterTicketDetailProps> = ({
   // Download state
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  // Problem Resolved state
+  const [resolving, setResolving] = useState<boolean>(false);
+  const [resolvedNotice, setResolvedNotice] = useState<string | null>(null);
 
   const loadTicket = useCallback(async () => {
     if (!currentRequester) return;
@@ -198,6 +204,23 @@ export const RequesterTicketDetail: React.FC<RequesterTicketDetailProps> = ({
       setRemovalError(err.message || "Failed to remove attachment.");
     } finally {
       setIsRemoving(false);
+    }
+  };
+
+  const handleProblemResolved = async () => {
+    if (!ticket) return;
+    if (!window.confirm("Do you want to indicate that this problem appears resolved?")) {
+      return;
+    }
+    try {
+      setResolving(true);
+      await indicateProblemResolved(ticket.id);
+      setResolvedNotice("Your indication has been recorded. IT Staff will review and update the ticket.");
+      loadTicket();
+    } catch (err: any) {
+      setError(err.message || "Failed to record resolution indication");
+    } finally {
+      setResolving(false);
     }
   };
 
@@ -577,6 +600,45 @@ export const RequesterTicketDetail: React.FC<RequesterTicketDetailProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Problem Appears Resolved Action (FR-06, BR-05) */}
+      {ticket.status !== "Resolved" && ticket.status !== "Closed" && ticket.status !== "Cancelled" && (
+        <div
+          className="card border-0 shadow-sm rounded-3 p-3 mb-4"
+          style={{ backgroundColor: "#EAF6EF", borderLeft: "4px solid #006B3C" }}
+          data-testid="resolve-indication-card"
+        >
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <h6 className="fw-semibold mb-1" style={{ color: "#006B3C" }}>
+                Has your issue been resolved?
+              </h6>
+              <p className="small text-muted mb-0">
+                You can notify IT Staff that the reported problem appears resolved on your end.
+              </p>
+            </div>
+            <button
+              type="button"
+              id="problemResolvedBtn"
+              data-testid="problem-resolved-btn"
+              className="btn btn-sm text-white px-3 fw-medium"
+              style={{ backgroundColor: "#006B3C", borderColor: "#006B3C" }}
+              onClick={handleProblemResolved}
+              disabled={resolving}
+            >
+              {resolving ? "Submitting..." : "✓ Problem Appears Resolved"}
+            </button>
+          </div>
+          {resolvedNotice && (
+            <div className="alert alert-success py-2 px-3 mt-3 mb-0 small" role="alert">
+              {resolvedNotice}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Public Comments Section (FR-07, BR-04) */}
+      <PublicComments ticketId={ticket.id} />
 
       {/* 4. Soft-Removal Confirmation Modal (AC-12, BR-11) */}
       {removalTarget && (
