@@ -28,7 +28,7 @@ Throughout the Lab 3 sprint, our team strictly adheres to the engineering workfl
 | **Issue #37** (Issue 4) | `feature/lab3-staff-queue` | #45 | [#45](https://github.com/Leviathan-c137/toktickit/pull/45) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #38** (Issue 5) | `feature/lab3-staff-detail` | #46 | [#46](https://github.com/Leviathan-c137/toktickit/pull/46) | @FramePongrit | **Approved** | @FramePongrit |
 | **Issue #39** (Issue 6) | `feature/lab3-user-admin` | #47 | [#47](https://github.com/Leviathan-c137/toktickit/pull/47) | @FramePongrit | **Approved** | @FramePongrit |
-| **Issue #40** (Issue 7) | `feature/lab3-e2e-and-release` | TBD | TBD | @FramePongrit | Pending | Pending |
+| **Issue #40** (Issue 7) | `feature/lab3-e2e-and-release` | #48 | [#48](https://github.com/Leviathan-c137/toktickit/pull/48) | @FramePongrit | Pending | Pending |
 | **Release** | `lab3-staging` | TBD | TBD | @FramePongrit | Pending | Pending |
 
 ---
