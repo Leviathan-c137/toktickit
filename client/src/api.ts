@@ -489,6 +489,94 @@ export async function fetchActiveStaffUsers(): Promise<import("./types.js").Staf
   return data.users;
 }
 
+// ---------------------------------------------------------------------------
+// Lab 3 Issue 6 — Administrator User Management API Functions (FR-13 to FR-18)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch paginated user accounts with search and filters (FR-13, AC-09).
+ */
+export async function fetchAdminUsers(
+  filters: import("./types.js").AdminUserFilters = {}
+): Promise<import("./types.js").PaginatedAdminUsers> {
+  const query = new URLSearchParams();
+  if (filters.search) query.set("search", filters.search);
+  if (filters.role && filters.role !== "All") query.set("role", filters.role);
+  if (filters.isActive && filters.isActive !== "All") query.set("isActive", filters.isActive);
+  if (filters.page) query.set("page", String(filters.page));
+  if (filters.limit) query.set("limit", String(filters.limit));
+
+  const queryString = query.toString() ? `?${query.toString()}` : "";
+  const res = await fetch(`${API_URL}/api/admin/users${queryString}`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch users");
+  }
+  return res.json();
+}
+
+/**
+ * Create a new user account with initial password (FR-14, AC-09, BR-10, BR-11).
+ */
+export async function createAdminUser(
+  input: import("./types.js").CreateAdminUserInput
+): Promise<{ user: import("./types.js").AdminUser }> {
+  const res = await fetch(`${API_URL}/api/admin/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to create user");
+  }
+  return res.json();
+}
+
+/**
+ * Update user details and active status (FR-15, AC-10, AC-11, BR-12, BR-13).
+ */
+export async function updateAdminUser(
+  id: number,
+  input: import("./types.js").UpdateAdminUserInput
+): Promise<{ user: import("./types.js").AdminUser }> {
+  const res = await fetch(`${API_URL}/api/admin/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to update user");
+  }
+  return res.json();
+}
+
+/**
+ * Reset initial password for user (FR-16).
+ */
+export async function resetAdminUserPassword(
+  id: number,
+  initialPassword: string
+): Promise<{ message: string }> {
+  const res = await fetch(`${API_URL}/api/admin/users/${id}/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ initialPassword }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to reset password");
+  }
+  return res.json();
+}
+
+
 
 
 

@@ -232,4 +232,58 @@ export interface StaffTicketDetailData extends StaffTicketItem {
   internalNotes?: InternalNote[];
 }
 
+// ---------------------------------------------------------------------------
+// Lab 3 Issue 6 — Administrator User Management Types
+// ---------------------------------------------------------------------------
+
+export interface AdminUser {
+  id: number;
+  fullName: string;
+  email: string;
+  role: Role;
+  department?: string | null;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AdminUserPagination {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface PaginatedAdminUsers {
+  users: AdminUser[];
+  pagination: AdminUserPagination;
+}
+
+export interface AdminUserFilters {
+  search?: string;
+  role?: string;
+  isActive?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateAdminUserInput {
+  fullName: string;
+  email: string;
+  role: Role;
+  department?: string;
+  isActive?: boolean;
+  initialPassword: string;
+}
+
+export interface UpdateAdminUserInput {
+  fullName?: string;
+  email?: string;
+  role?: Role;
+  department?: string;
+  isActive?: boolean;
+}
+
+
 
