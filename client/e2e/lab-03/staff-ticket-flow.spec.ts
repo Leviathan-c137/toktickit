@@ -15,9 +15,8 @@ test.describe("Lab 3 E2E-02: IT Staff Ticket Management Workflow (AC-05, AC-06, 
 
     // 1. Sign In as IT Staff (Michael Brown)
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     await page.locator('[data-testid="login-email"]').fill("mbrown@toktickit.com");
     await page.locator('[data-testid="login-password"]').fill("Password123!");

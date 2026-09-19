@@ -8,22 +8,18 @@ const mockActiveUser: User = {
   id: 1,
   email: "admin@kmutt.ac.th",
   fullName: "System Admin",
-  role: "Admin",
+  role: "Administrator",
   isActive: true,
   mustChangePassword: false,
-  createdAt: "2026-09-01T00:00:00.000Z",
-  updatedAt: "2026-09-01T00:00:00.000Z",
 };
 
 const mockMustChangeUser: User = {
   id: 2,
   email: "newuser@kmutt.ac.th",
   fullName: "New IT Staff",
-  role: "IT_Staff",
+  role: "ITStaff",
   isActive: true,
   mustChangePassword: true,
-  createdAt: "2026-09-01T00:00:00.000Z",
-  updatedAt: "2026-09-01T00:00:00.000Z",
 };
 
 describe("Login and Mandatory Password Change Component (UI-01, AC-01, AC-02)", () => {

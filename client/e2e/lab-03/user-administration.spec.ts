@@ -15,9 +15,8 @@ test.describe("Lab 3 E2E-03: Administrator User Management & Safety Guardrails (
 
     // 1. Sign in as Administrator
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     await page.locator('[data-testid="login-email"]').fill("admin@toktickit.com");
     await page.locator('[data-testid="login-password"]').fill("Password123!");
@@ -85,5 +84,20 @@ test.describe("Lab 3 E2E-03: Administrator User Management & Safety Guardrails (
 
     // Verify success notice appears
     await expect(page.locator(".alert-success")).toContainText("has been reset");
+
+    // 6. Full-loop confirmation: Verify the reset password works via direct authentication
+    // Log out as administrator
+    await page.locator('[data-testid="logout-btn"]').click();
+    const loginHeaderBtn = page.locator('[data-testid="header-sign-in-btn"]');
+    await loginHeaderBtn.waitFor({ state: "visible", timeout: 8000 });
+    await loginHeaderBtn.click();
+
+    // Log in with the newly reset password
+    await page.locator('[data-testid="login-email"]').fill(testEmail);
+    await page.locator('[data-testid="login-password"]').fill("NewResetPass!2026");
+    await page.locator('[data-testid="login-submit"]').click();
+
+    // Verify successful authentication prompting the mandatory password change (FR-16, BR-02)
+    await expect(page.locator("h2", { hasText: /Mandatory Password Change|First-Time Login/i })).toBeVisible({ timeout: 10000 });
   });
 });

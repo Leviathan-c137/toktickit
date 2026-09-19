@@ -78,20 +78,25 @@ const mockStaffTickets: StaffTicketItem[] = [
     id: 101,
     ticketNumber: "TKT-2026-000101",
     summary: "VPN Connection drops constantly",
-    categoryId: 4,
-    categoryName: "Network",
     requestedPriority: "High",
     itPriority: "High",
     status: "InProgress",
-    requesterId: 3,
-    requesterName: "Jennifer Anderson",
-    requesterEmail: "jennifer.anderson@kmutt.ac.th",
-    ownerId: null,
-    ownerName: null,
     createdAt: "2026-09-18T10:00:00.000Z",
     updatedAt: "2026-09-18T12:00:00.000Z",
-    commentCount: 1,
-    internalNoteCount: 1,
+    requester: {
+      id: 3,
+      fullName: "Jennifer Anderson",
+      email: "jennifer.anderson@kmutt.ac.th",
+      department: "Computer Engineering",
+    },
+    owner: null,
+    category: { id: 4, name: "Network" },
+    relatedSystem: { id: 1, name: "VPN Gateway" },
+    _count: {
+      attachments: 0,
+      publicComments: 1,
+      internalNotes: 1,
+    },
   },
 ];
 
@@ -113,6 +118,7 @@ const mockStaffTicketDetailData: StaffTicketDetailData = {
   },
   owner: null,
   category: { id: 4, name: "Network" },
+  relatedSystem: { id: 1, name: "VPN Gateway" },
   attachments: [],
 };
 
@@ -253,7 +259,6 @@ describe("Lab 3 E2E Integration Suite (UI-01, UI-02, UI-03, UI-04, E2E-01 to E2E
 
     vi.spyOn(api, "resetAdminUserPassword").mockResolvedValue({
       message: "Password reset successfully",
-      user: { ...mockAdminUserRecords[1], mustChangePassword: true },
     });
 
     fireEvent.change(screen.getByLabelText(/New Initial Password/i), {
@@ -279,10 +284,8 @@ describe("Lab 3 E2E Integration Suite (UI-01, UI-02, UI-03, UI-04, E2E-01 to E2E
       pagination: {
         page: 1,
         limit: 10,
-        totalTickets: 1,
+        totalCount: 1,
         totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
       },
     });
     vi.spyOn(api, "fetchCategories").mockResolvedValue([

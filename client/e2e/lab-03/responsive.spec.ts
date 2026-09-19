@@ -15,9 +15,8 @@ test.describe("Lab 3 Responsive Layout Verification across Viewports", () => {
     await page.goto("/");
 
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     await page.locator('[data-testid="login-email"]').fill("admin@toktickit.com");
     await page.locator('[data-testid="login-password"]').fill("Password123!");
@@ -50,9 +49,8 @@ test.describe("Lab 3 Responsive Layout Verification across Viewports", () => {
     await page.goto("/");
 
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     await page.locator('[data-testid="login-email"]').fill("mbrown@toktickit.com");
     await page.locator('[data-testid="login-password"]').fill("Password123!");
@@ -69,9 +67,8 @@ test.describe("Lab 3 Responsive Layout Verification across Viewports", () => {
     await page.goto("/");
 
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     // Login screen is fully accessible on mobile
     await expect(page.locator("h2", { hasText: "TokTickIT Sign In" })).toBeVisible();

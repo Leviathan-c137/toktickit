@@ -14,9 +14,8 @@ test.describe("Lab 3 E2E-01: Authentication & Password Lifecycle (AC-01, AC-02, 
 
     // Click Sign In from header or navigate to login
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     await expect(page.locator("h2", { hasText: "TokTickIT Sign In" })).toBeVisible();
 
@@ -35,9 +34,8 @@ test.describe("Lab 3 E2E-01: Authentication & Password Lifecycle (AC-01, AC-02, 
     await page.goto("/");
 
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     // Try logging in with inactive account
     await page.locator('[data-testid="login-email"]').fill("inactive.staff@toktickit.com");
@@ -54,9 +52,8 @@ test.describe("Lab 3 E2E-01: Authentication & Password Lifecycle (AC-01, AC-02, 
     // 1. Log in as Admin to provision a fresh user with initial password
     await page.goto("/");
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     await page.locator('[data-testid="login-email"]').fill("admin@toktickit.com");
     await page.locator('[data-testid="login-password"]').fill("Password123!");
@@ -106,9 +103,8 @@ test.describe("Lab 3 E2E-01: Authentication & Password Lifecycle (AC-01, AC-02, 
     await page.goto("/");
 
     const signInBtn = page.locator('[data-testid="header-sign-in-btn"]');
-    if (await signInBtn.isVisible()) {
-      await signInBtn.click();
-    }
+    await signInBtn.waitFor({ state: "visible", timeout: 8000 });
+    await signInBtn.click();
 
     await page.locator('[data-testid="login-email"]').fill("admin@toktickit.com");
     await page.locator('[data-testid="login-password"]').fill("Password123!");
