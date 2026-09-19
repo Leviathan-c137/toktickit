@@ -145,6 +145,7 @@ async function main() {
         department: u.department,
         isActive: u.isActive,
         mustChangePassword: u.mustChangePassword,
+        passwordHash: defaultPasswordHash,
       },
       create: {
         ...u,

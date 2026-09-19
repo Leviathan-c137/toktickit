@@ -10,9 +10,10 @@ import { useRequester } from "../context/RequesterContext.js";
 
 interface UserManagementProps {
   onBack?: () => void;
+  currentUser?: import("../types.js").User | null;
 }
 
-export const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
+export const UserManagement: React.FC<UserManagementProps> = ({ onBack, currentUser }) => {
   const { currentRequester } = useRequester();
 
   // Data & State
@@ -205,7 +206,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
     }
   };
 
-  const isCurrentUser = (user: AdminUser): boolean => Boolean(currentRequester && currentRequester.id === user.id);
+  const isCurrentUser = (user: AdminUser): boolean =>
+    Boolean((currentUser && currentUser.id === user.id) || (currentRequester && currentRequester.id === user.id));
 
   return (
     <div className="container py-3">
