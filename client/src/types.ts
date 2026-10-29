@@ -91,6 +91,7 @@ export interface Ticket {
     name: string;
   };
   attachments: Attachment[];
+  actionsTaken?: ActionTaken[];
   createdAt: string;
   updatedAt: string;
 }
@@ -230,6 +231,7 @@ export interface StaffTicketDetailData extends StaffTicketItem {
   attachments: Attachment[];
   publicComments?: PublicComment[];
   internalNotes?: InternalNote[];
+  actionsTaken?: ActionTaken[];
 }
 
 // ---------------------------------------------------------------------------
@@ -285,5 +287,44 @@ export interface UpdateAdminUserInput {
   isActive?: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Lab 4 — Actions Taken Types
+// ---------------------------------------------------------------------------
 
+export interface ActionTaken {
+  id: number;
+  ticketId: number;
+  actionDateTime: string;
+  description: string;
+  result: string;
+  followUpRequired: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  performedBy: {
+    id: number;
+    fullName: string;
+    email: string;
+    role: Role;
+  };
+}
 
+export interface CreateActionTakenInput {
+  description: string;
+  result: string;
+  actionDateTime?: string;
+  followUpRequired?: boolean;
+  followUpNote?: string;
+  attachmentNotes?: string;
+}
+
+export interface UpdateActionTakenInput {
+  description?: string;
+  result?: string;
+  actionDateTime?: string;
+  followUpRequired?: boolean;
+  followUpNote?: string;
+  attachmentNotes?: string;
+  expectedUpdatedAt?: string;
+}
