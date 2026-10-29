@@ -183,6 +183,26 @@ async function main() {
           content: "RADIUS server auth logs show timestamp skew on VPN gateway 2. Escalating to network admin.",
         },
       ],
+      actionsTaken: [
+        {
+          performerEmail: "mbrown@toktickit.com",
+          actionDateTime: new Date("2026-09-18T09:30:00Z"),
+          description: "Inspected RADIUS authentication logs on primary and backup VPN gateways.",
+          result: "Identified clock drift of 14 seconds causing Kerberos ticket validation failure.",
+          followUpRequired: true,
+          followUpNote: "Coordinate with network engineering team to resync NTP daemon on Gateway 2.",
+          attachmentNotes: "radius_auth_drift_log.txt",
+        },
+        {
+          performerEmail: "sjohnson@toktickit.com",
+          actionDateTime: new Date("2026-09-18T14:15:00Z"),
+          description: "Applied manual NTP resync on Gateway 2 and tested tunnel handshake with test client.",
+          result: "Handshake completed successfully in 1.2s with AES-256 cipher.",
+          followUpRequired: false,
+          followUpNote: null,
+          attachmentNotes: null,
+        },
+      ],
     },
     {
       ticketNumber: "TKT-2026-000002",
@@ -207,6 +227,17 @@ async function main() {
           content: "Replacement 57Wh batteries are currently in stock in cabinet B.",
         },
       ],
+      actionsTaken: [
+        {
+          performerEmail: "sjohnson@toktickit.com",
+          actionDateTime: new Date("2026-09-18T11:00:00Z"),
+          description: "Ran Lenovo Vantage Hardware Diagnostic battery cycle test.",
+          result: "Battery cycle count is 842; health report indicates 41% of original capacity.",
+          followUpRequired: true,
+          followUpNote: "Schedule battery replacement session when requester brings laptop in.",
+          attachmentNotes: "lenovo_battery_health_report.pdf",
+        },
+      ],
     },
     {
       ticketNumber: "TKT-2026-000003",
@@ -221,6 +252,7 @@ async function main() {
       systemName: "Printer",
       publicComments: [],
       internalNotes: [],
+      actionsTaken: [], // Zero actions taken (empty state verification)
     },
     {
       ticketNumber: "TKT-2026-000004",
@@ -245,6 +277,17 @@ async function main() {
           content: "Session config was updated in redis session store TTL parameter.",
         },
       ],
+      actionsTaken: [
+        {
+          performerEmail: "dlee@toktickit.com",
+          actionDateTime: new Date("2026-09-18T16:00:00Z"),
+          description: "Updated session timeout in application configuration file to 1800 seconds.",
+          result: "Config applied and verified on staging server.",
+          followUpRequired: false,
+          followUpNote: null,
+          attachmentNotes: null,
+        },
+      ],
     },
     {
       ticketNumber: "TKT-2026-000005",
@@ -267,6 +310,72 @@ async function main() {
         {
           authorEmail: "sjohnson@toktickit.com",
           content: "Verified requester identity via phone call.",
+        },
+      ],
+      actionsTaken: [
+        {
+          performerEmail: "sjohnson@toktickit.com",
+          actionDateTime: new Date("2026-09-19T08:30:00Z"),
+          description: "Verified employee ID over phone, unlocked Active Directory account, and issued temporary PIN.",
+          result: "Requester successfully logged in and updated primary password.",
+          followUpRequired: false,
+          followUpNote: null,
+          attachmentNotes: null,
+        },
+      ],
+    },
+    {
+      ticketNumber: "TKT-2026-000006",
+      summary: "Classroom projector HDMI port loose in Room 204",
+      description: "HDMI signal keeps dropping when laptops are connected to the lectern projector.",
+      requestedPriority: Priority.Medium,
+      itPriority: Priority.Medium,
+      status: TicketStatus.Closed,
+      requesterEmail: "janderson@toktickit.com",
+      ownerEmail: "mbrown@toktickit.com",
+      categoryName: "Hardware",
+      systemName: "LEB2 App",
+      publicComments: [
+        {
+          authorEmail: "mbrown@toktickit.com",
+          content: "Replaced the wall plate and HDMI pass-through cable. Tested with 1080p 60Hz feed.",
+        },
+      ],
+      internalNotes: [],
+      actionsTaken: [
+        {
+          performerEmail: "mbrown@toktickit.com",
+          actionDateTime: new Date("2026-09-17T13:00:00Z"),
+          description: "Inspected lectern cabling and swapped faulty HDMI cable with new braided cable.",
+          result: "Signal stable for 45 minutes of continuous video playback.",
+          followUpRequired: false,
+          followUpNote: null,
+          attachmentNotes: "projector_test_pattern.png",
+        },
+      ],
+    },
+    {
+      ticketNumber: "TKT-2026-000007",
+      summary: "MATLAB license activation error after OS reinstallation",
+      description: "Error 5032: Maximum number of activations reached for this campus license.",
+      requestedPriority: Priority.High,
+      itPriority: Priority.High,
+      status: TicketStatus.Reopened,
+      requesterEmail: "janderson@toktickit.com",
+      ownerEmail: "dlee@toktickit.com",
+      categoryName: "Software",
+      systemName: "Corporate Laptop",
+      publicComments: [],
+      internalNotes: [],
+      actionsTaken: [
+        {
+          performerEmail: "dlee@toktickit.com",
+          actionDateTime: new Date("2026-09-19T10:00:00Z"),
+          description: "Deactivated dormant machine ID from MathWorks portal and regenerated license file.",
+          result: "License file downloaded; pending user confirmation.",
+          followUpRequired: true,
+          followUpNote: "Check if requester can run MATLAB toolboxes without error.",
+          attachmentNotes: null,
         },
       ],
     },
@@ -341,13 +450,43 @@ async function main() {
         }
       }
     }
+
+    // Seed Actions Taken
+    if (t.actionsTaken && t.actionsTaken.length > 0) {
+      for (const a of t.actionsTaken) {
+        const performer = users[a.performerEmail];
+        if (performer) {
+          const existingAction = await prisma.actionTaken.findFirst({
+            where: {
+              ticketId: ticket.id,
+              performedById: performer.id,
+              description: a.description,
+            },
+          });
+          if (!existingAction) {
+            await prisma.actionTaken.create({
+              data: {
+                ticketId: ticket.id,
+                performedById: performer.id,
+                actionDateTime: a.actionDateTime,
+                description: a.description,
+                result: a.result,
+                followUpRequired: a.followUpRequired,
+                followUpNote: a.followUpNote,
+                attachmentNotes: a.attachmentNotes,
+              },
+            });
+          }
+        }
+      }
+    }
   }
 
-  console.log("Lab 3 idempotent seed completed successfully!");
+  console.log("Lab 4 idempotent seed completed successfully!");
   console.log(`- ${categoryNames.length} Categories`);
   console.log(`- ${systemNames.length} Related Systems`);
   console.log(`- ${seedUsers.length} Users (${seedUsers.filter(u => u.isActive).length} active, ${seedUsers.filter(u => !u.isActive).length} inactive)`);
-  console.log(`- Sample tickets, public comments, and internal notes populated.`);
+  console.log(`- Sample tickets, public comments, internal notes, and actions taken populated.`);
 }
 
 main()
