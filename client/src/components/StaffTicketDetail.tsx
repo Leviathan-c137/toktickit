@@ -14,6 +14,7 @@ import {
 } from "../api.js";
 import { PublicComments } from "./PublicComments.js";
 import { InternalNotes } from "./InternalNotes.js";
+import { ActionsTaken } from "./ActionsTaken.js";
 
 interface StaffTicketDetailProps {
   ticketId: number;
@@ -396,6 +397,9 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Actions Taken Sub-Section (Lab 4 Issue 3 - AC-01, AC-02, AC-04, AC-07) */}
+          <ActionsTaken ticketId={ticket.id} />
         </div>
 
         {/* Right Column: Tabbed Activity Feed (Public Comments vs Internal Notes) */}

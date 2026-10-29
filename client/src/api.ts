@@ -1,4 +1,4 @@
-import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket, User, PublicComment } from "./types.js";
+import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket, User, PublicComment, ActionTaken, CreateActionTakenInput, UpdateActionTakenInput } from "./types.js";
 export * from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -597,7 +597,72 @@ export async function resetAdminUserPassword(
   return res.json();
 }
 
+// ---------------------------------------------------------------------------
+// Lab 4 Issue 3 — Actions Taken API Functions (AC-01, AC-02, AC-03, AC-04, AC-07)
+// ---------------------------------------------------------------------------
 
+/**
+ * Fetch all Actions Taken for a ticket in stable chronological order.
+ */
+export async function fetchActionsTaken(ticketId: number): Promise<ActionTaken[]> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch actions taken");
+  }
+  const data = await res.json();
+  return Array.isArray(data) ? data : data.actions || [];
+}
 
+/**
+ * Record a new Action Taken under a ticket (IT Staff & Admin only).
+ */
+export async function createActionTaken(
+  ticketId: number,
+  data: CreateActionTakenInput
+): Promise<ActionTaken> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    const err: any = new Error(errorData.error?.message || errorData.message || "Failed to create action taken");
+    err.status = res.status;
+    err.code = errorData.error?.code;
+    throw err;
+  }
+  return res.json();
+}
 
-
+/**
+ * Update an existing Action Taken record (IT Staff & Admin only).
+ */
+export async function updateActionTaken(
+  ticketId: number,
+  actionId: number,
+  data: UpdateActionTakenInput
+): Promise<ActionTaken> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions/${actionId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    const err: any = new Error(errorData.error?.message || errorData.message || "Failed to update action taken");
+    err.status = res.status;
+    err.code = errorData.error?.code;
+    throw err;
+  }
+  return res.json();
+}
