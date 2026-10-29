@@ -22,7 +22,7 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 
 | Issue # | Branch Name | PR # | PR Link | Reviewer | Review Decision | Merged By |
 |---|---|---|---|---|---|---|
-| **Issue #50** (Issue 1) | `feature/lab4-spec-and-tests` | TBD | Pending Review | @FramePongrit | Pending | Pending |
+| **Issue #50** (Issue 1) | `feature/lab4-spec-and-tests` | #56 | [#56](https://github.com/Leviathan-c137/toktickit/pull/56) | @FramePongrit | Pending Review | Pending |
 | **Issue #51** (Issue 2) | `feature/lab4-actions-taken-foundation` | TBD | Pending Review | @FramePongrit | Pending | Pending |
 | **Issue #52** (Issue 3) | `feature/lab4-actions-taken-ui` | TBD | Pending Review | @FramePongrit | Pending | Pending |
 | **Issue #53** (Issue 4) | `feature/lab4-ticket-workflow` | TBD | Pending Review | @FramePongrit | Pending | Pending |
