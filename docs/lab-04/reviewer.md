@@ -24,7 +24,7 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 |---|---|---|---|---|---|---|
 | **Issue #50** (Issue 1) | `feature/lab4-spec-and-tests` | #56 | [#56](https://github.com/Leviathan-c137/toktickit/pull/56) | @Beethoven190 | **Approved** | @Beethoven190 |
 | **Issue #51** (Issue 2) | `feature/lab4-actions-taken-foundation` | #57 | [#57](https://github.com/Leviathan-c137/toktickit/pull/57) | @Beethoven190 | **Approved** | @Beethoven190 |
-| **Issue #52** (Issue 3) | `feature/lab4-actions-taken-ui` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
+| **Issue #52** (Issue 3) | `feature/lab4-actions-taken-ui` | #58 | [#58](https://github.com/Leviathan-c137/toktickit/pull/58) | @Beethoven190 | Pending Review | Pending |
 | **Issue #53** (Issue 4) | `feature/lab4-ticket-workflow` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
 | **Issue #54** (Issue 5) | `feature/lab4-role-dashboards` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
 | **Issue #55** (Issue 6) | `feature/lab4-final-hardening` | TBD | Pending Review | @Sxr1n | Pending | Pending |
@@ -43,3 +43,8 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 - **Author Summary:** Added `ActionTaken` Prisma model linked to `Ticket` (cascade delete) and `User`. Updated `seed.ts` with idempotent sample data featuring 0, 1, and multiple actions performed by different IT Staff members. Implemented `GET/POST /api/tickets/:id/actions` and `PATCH /api/tickets/:id/actions/:actionId` with automatic `performedById` attribution, BR-04 conditional follow-up note validation, Requester read-only data isolation, and HTTP 409 stale-update conflict detection. Achieved 100% test pass across 14 new tests (`server/tests/lab-04/actions-taken.api.test.ts`) and all 124 server tests.
 - **Review Feedback:** Thorough review and code audit by @Beethoven190 verifying schema relational integrity with cascade delete and performance indices, idempotent multi-action seed distributions, strict REST RBAC with automatic performedById attribution, BR-04 conditional follow-up note validation, and HTTP 409 stale-update concurrency defense. Full 124 server regression tests passing cleanly. Recommended focusing on the follow-up note validation cues and dynamic toggle in the upcoming Issue #52 UI.
 - **Outcome:** Approved and merged by @Beethoven190 into lab4-staging.
+
+### PR #58 (Issue #52: Actions Taken UI on Ticket Detail)
+- **Author Summary:** Built ActionsTaken.tsx component implementing chronological actions list, modal dialog for create/edit, real-time validation (including BR-04 conditional follow-up note validation with automatic focus on toggle as requested by @Beethoven190), HTTP 409 concurrency conflict alert, and Requester read-only mode with empty state. Integrated component into both StaffTicketDetail.tsx and RequesterTicketDetail.tsx. Implemented 7 new tests in client/tests/lab-04/ActionsTaken.test.tsx (UI-01, UI-02) with 100% pass across all 55 client tests and 124 server tests.
+- **Review Feedback:** *(Awaiting peer reviewer comments)*
+- **Outcome:** *(Pending)*
