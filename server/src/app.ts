@@ -854,6 +854,24 @@ app.get(
             },
             orderBy: { createdAt: "asc" },
           },
+          actionsTaken: {
+            select: {
+              id: true,
+              ticketId: true,
+              actionDateTime: true,
+              description: true,
+              result: true,
+              followUpRequired: true,
+              followUpNote: true,
+              attachmentNotes: true,
+              createdAt: true,
+              updatedAt: true,
+              performedBy: {
+                select: { id: true, fullName: true, email: true, role: true },
+              },
+            },
+            orderBy: [{ actionDateTime: "asc" }, { id: "asc" }],
+          },
         },
       });
 
@@ -1639,6 +1657,24 @@ app.get(
             },
             orderBy: { createdAt: "asc" },
           },
+          actionsTaken: {
+            select: {
+              id: true,
+              ticketId: true,
+              actionDateTime: true,
+              description: true,
+              result: true,
+              followUpRequired: true,
+              followUpNote: true,
+              attachmentNotes: true,
+              createdAt: true,
+              updatedAt: true,
+              performedBy: {
+                select: { id: true, fullName: true, email: true, role: true },
+              },
+            },
+            orderBy: [{ actionDateTime: "asc" }, { id: "asc" }],
+          },
         },
       });
 
@@ -2379,6 +2415,328 @@ app.post(
     } catch (err) {
       return res.status(500).json({
         error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to reset user password" },
+      });
+    }
+  }
+);
+
+// ---------------------------------------------------------------------------
+// Lab 4 — Actions Taken Endpoints (BR-01 to BR-05, AC-01 to AC-04, AC-07)
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/tickets/:id/actions
+ * Retrieve all Actions Taken for a ticket in stable chronological order (AC-03, AC-04, FR-05, BR-01, BR-05).
+ * - Requester: Allowed only if ticket.requesterId == authenticatedUser.id (403 Forbidden otherwise)
+ * - ITStaff, Administrator: Allowed for any accessible ticket
+ */
+app.get(
+  "/api/tickets/:id/actions",
+  authenticateToken,
+  requirePasswordChanged,
+  async (req: AuthenticatedUserRequest, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = parseInt(req.params.id, 10);
+
+    if (isNaN(ticketId)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Invalid ticket ID" },
+      });
+    }
+
+    try {
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+        select: { id: true, requesterId: true },
+      });
+
+      if (!ticket) {
+        return res.status(404).json({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+        });
+      }
+
+      // Requester data isolation check (BR-03, BR-09, AC-03)
+      if (req.user!.role === Role.Requester && ticket.requesterId !== req.user!.id) {
+        return res.status(403).json({
+          error: { code: "FORBIDDEN", message: "You do not have permission to view actions for this ticket" },
+        });
+      }
+
+      const actions = await prisma.actionTaken.findMany({
+        where: { ticketId },
+        orderBy: [{ actionDateTime: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          ticketId: true,
+          actionDateTime: true,
+          description: true,
+          result: true,
+          followUpRequired: true,
+          followUpNote: true,
+          attachmentNotes: true,
+          createdAt: true,
+          updatedAt: true,
+          performedBy: {
+            select: { id: true, fullName: true, email: true, role: true },
+          },
+        },
+      });
+
+      return res.status(200).json(actions);
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to retrieve actions taken" },
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/tickets/:id/actions
+ * Create an Action Taken sub-record under a ticket (AC-01, AC-02, FR-01, FR-03, FR-04, BR-01, BR-02, BR-03, BR-04).
+ * Strictly blocked for Requesters (403 Forbidden).
+ */
+app.post(
+  "/api/tickets/:id/actions",
+  authenticateToken,
+  requireRole(Role.ITStaff, Role.Administrator),
+  requirePasswordChanged,
+  async (req: AuthenticatedUserRequest, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = parseInt(req.params.id, 10);
+
+    if (isNaN(ticketId)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Invalid ticket ID" },
+      });
+    }
+
+    const {
+      description,
+      result,
+      followUpRequired,
+      followUpNote,
+      attachmentNotes,
+      actionDateTime,
+    } = req.body;
+
+    // Validate description (min 5 chars)
+    if (!description || typeof description !== "string" || description.trim().length < 5) {
+      return res.status(400).json({
+        error: {
+          code: "BAD_REQUEST",
+          message: "Action description is required and must be at least 5 characters",
+        },
+      });
+    }
+
+    // Validate result (min 3 chars)
+    if (!result || typeof result !== "string" || result.trim().length < 3) {
+      return res.status(400).json({
+        error: {
+          code: "BAD_REQUEST",
+          message: "Action result is required and must be at least 3 characters",
+        },
+      });
+    }
+
+    // Validate follow-up conditional rule (BR-04, AC-02)
+    const isFollowUp = Boolean(followUpRequired);
+    const trimmedFollowUpNote = typeof followUpNote === "string" ? followUpNote.trim() : "";
+    if (isFollowUp && (!trimmedFollowUpNote || trimmedFollowUpNote.length < 3)) {
+      return res.status(400).json({
+        error: {
+          code: "BAD_REQUEST",
+          message: "Follow-up note is required and must be at least 3 characters when follow-up is requested",
+        },
+      });
+    }
+
+    try {
+      const ticket = await prisma.ticket.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticket) {
+        return res.status(404).json({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+        });
+      }
+
+      // Parse actionDateTime or default to now
+      let parsedDateTime = new Date();
+      if (actionDateTime) {
+        const d = new Date(actionDateTime);
+        if (!isNaN(d.getTime())) {
+          parsedDateTime = d;
+        }
+      }
+
+      const action = await prisma.actionTaken.create({
+        data: {
+          ticketId,
+          performedById: req.user!.id,
+          actionDateTime: parsedDateTime,
+          description: description.trim(),
+          result: result.trim(),
+          followUpRequired: isFollowUp,
+          followUpNote: isFollowUp ? trimmedFollowUpNote : null,
+          attachmentNotes: typeof attachmentNotes === "string" && attachmentNotes.trim().length > 0 ? attachmentNotes.trim() : null,
+        },
+        select: {
+          id: true,
+          ticketId: true,
+          actionDateTime: true,
+          description: true,
+          result: true,
+          followUpRequired: true,
+          followUpNote: true,
+          attachmentNotes: true,
+          createdAt: true,
+          updatedAt: true,
+          performedBy: {
+            select: { id: true, fullName: true, email: true, role: true },
+          },
+        },
+      });
+
+      return res.status(201).json({ action, ...action });
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to create action taken" },
+      });
+    }
+  }
+);
+
+/**
+ * PATCH /api/tickets/:id/actions/:actionId
+ * Update an Action Taken record (AC-01, AC-02, AC-07, FR-02, BR-04, BR-08).
+ * Strictly blocked for Requesters (403 Forbidden).
+ */
+app.patch(
+  "/api/tickets/:id/actions/:actionId",
+  authenticateToken,
+  requireRole(Role.ITStaff, Role.Administrator),
+  requirePasswordChanged,
+  async (req: AuthenticatedUserRequest, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = parseInt(req.params.id, 10);
+    const actionId = parseInt(req.params.actionId, 10);
+
+    if (isNaN(ticketId) || isNaN(actionId)) {
+      return res.status(400).json({
+        error: { code: "BAD_REQUEST", message: "Invalid ticket ID or action ID" },
+      });
+    }
+
+    try {
+      const existingAction = await prisma.actionTaken.findFirst({
+        where: { id: actionId, ticketId },
+      });
+
+      if (!existingAction) {
+        return res.status(404).json({
+          error: { code: "NOT_FOUND", message: "Action Taken record not found" },
+        });
+      }
+
+      const {
+        description,
+        result,
+        followUpRequired,
+        followUpNote,
+        attachmentNotes,
+        actionDateTime,
+        expectedUpdatedAt,
+      } = req.body;
+
+      // Concurrency check (AC-07, BR-08)
+      if (expectedUpdatedAt) {
+        const expectedDate = new Date(expectedUpdatedAt);
+        if (existingAction.updatedAt.getTime() !== expectedDate.getTime()) {
+          return res.status(409).json({
+            error: {
+              code: "CONFLICT",
+              message: "Action Taken has been modified by another user. Please reload the latest changes.",
+            },
+          });
+        }
+      }
+
+      // Validate description if provided
+      if (description !== undefined) {
+        if (typeof description !== "string" || description.trim().length < 5) {
+          return res.status(400).json({
+            error: {
+              code: "BAD_REQUEST",
+              message: "Action description must be at least 5 characters",
+            },
+          });
+        }
+      }
+
+      // Validate result if provided
+      if (result !== undefined) {
+        if (typeof result !== "string" || result.trim().length < 3) {
+          return res.status(400).json({
+            error: {
+              code: "BAD_REQUEST",
+              message: "Action result must be at least 3 characters",
+            },
+          });
+        }
+      }
+
+      // Validate followUpRequired and followUpNote
+      const isFollowUp = followUpRequired !== undefined ? Boolean(followUpRequired) : existingAction.followUpRequired;
+      let finalFollowUpNote = existingAction.followUpNote;
+
+      if (followUpNote !== undefined) {
+        finalFollowUpNote = typeof followUpNote === "string" ? followUpNote.trim() : null;
+      }
+
+      if (isFollowUp && (!finalFollowUpNote || finalFollowUpNote.length < 3)) {
+        return res.status(400).json({
+          error: {
+            code: "BAD_REQUEST",
+            message: "Follow-up note is required and must be at least 3 characters when follow-up is requested",
+          },
+        });
+      }
+
+      const updatedAction = await prisma.actionTaken.update({
+        where: { id: actionId },
+        data: {
+          description: description !== undefined ? description.trim() : undefined,
+          result: result !== undefined ? result.trim() : undefined,
+          followUpRequired: isFollowUp,
+          followUpNote: isFollowUp ? finalFollowUpNote : null,
+          attachmentNotes: attachmentNotes !== undefined ? (typeof attachmentNotes === "string" && attachmentNotes.trim().length > 0 ? attachmentNotes.trim() : null) : undefined,
+          actionDateTime: actionDateTime ? new Date(actionDateTime) : undefined,
+        },
+        select: {
+          id: true,
+          ticketId: true,
+          actionDateTime: true,
+          description: true,
+          result: true,
+          followUpRequired: true,
+          followUpNote: true,
+          attachmentNotes: true,
+          createdAt: true,
+          updatedAt: true,
+          performedBy: {
+            select: { id: true, fullName: true, email: true, role: true },
+          },
+        },
+      });
+
+      return res.status(200).json({ action: updatedAction, ...updatedAction });
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to update action taken" },
       });
     }
   }
