@@ -23,7 +23,7 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 | Issue # | Branch Name | PR # | PR Link | Reviewer | Review Decision | Merged By |
 |---|---|---|---|---|---|---|
 | **Issue #50** (Issue 1) | `feature/lab4-spec-and-tests` | #56 | [#56](https://github.com/Leviathan-c137/toktickit/pull/56) | @Beethoven190 | **Approved** | @Beethoven190 |
-| **Issue #51** (Issue 2) | `feature/lab4-actions-taken-foundation` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
+| **Issue #51** (Issue 2) | `feature/lab4-actions-taken-foundation` | #57 | [#57](https://github.com/Leviathan-c137/toktickit/pull/57) | @Beethoven190 | Pending Review | Pending |
 | **Issue #52** (Issue 3) | `feature/lab4-actions-taken-ui` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
 | **Issue #53** (Issue 4) | `feature/lab4-ticket-workflow` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
 | **Issue #54** (Issue 5) | `feature/lab4-role-dashboards` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
@@ -38,3 +38,8 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 - **Author Summary:** Defined the Sprint 4 engineering contract across `specification.md`, `ui-spec.md`, `api-spec.md`, `tests.md`, `reviewer.md`, and `ai-use.md`. Formulated business rules (BR-01 through BR-12) and Acceptance Criteria (AC-01 through AC-12) covering Actions Taken, Dashboards, Ticket Workflow, and Regression Hardening.
 - **Review Feedback:** Thorough review by @Beethoven190 confirming parent-child modeling (BR-01), distributed team execution without reassigning ticket coordinator (BR-02), conditional follow-up note validation (BR-04), 8-state ticket transitions and resolution gate (BR-06, BR-07), Zen Green role dashboards, and complete traceability matrix mapping AC-01 to AC-12 across unit, API, UI, and E2E suites.
 - **Outcome:** Approved and merged by @Beethoven190 into `lab4-staging`.
+
+### PR #57 (Issue #51: Actions Taken Foundation, Database Migration, Seed, and REST APIs)
+- **Author Summary:** Added `ActionTaken` Prisma model linked to `Ticket` (cascade delete) and `User`. Updated `seed.ts` with idempotent sample data featuring 0, 1, and multiple actions performed by different IT Staff members. Implemented `GET/POST /api/tickets/:id/actions` and `PATCH /api/tickets/:id/actions/:actionId` with automatic `performedById` attribution, BR-04 conditional follow-up note validation, Requester read-only data isolation, and HTTP 409 stale-update conflict detection. Achieved 100% test pass across 14 new tests (`server/tests/lab-04/actions-taken.api.test.ts`) and all 124 server tests.
+- **Review Feedback:** *(Awaiting peer reviewer comments)*
+- **Outcome:** *(Pending)*
