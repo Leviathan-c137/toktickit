@@ -25,9 +25,10 @@ The Lab 4 test strategy establishes comprehensive quality verification spanning 
 | **UI-03** | UI | AC-05, AC-06, FR-07 | Ticket workflow & status transition UI | Shows permitted status transitions and resolution gate controls | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
 | **UI-04** | UI | AC-08, AC-10, FR-10 | Requester Dashboard component & drill-down | Renders 4 metric cards, recent tickets, and drill-down links | `client/tests/lab-04/RequesterDashboard.test.tsx` | Pass |
 | **UI-05** | UI | AC-09, AC-10, FR-11 | Staff Dashboard component & drill-down | Renders 5 metric cards, recent queue tickets, and drill-down links | `client/tests/lab-04/StaffDashboard.test.tsx` | Pass |
-| **E2E-01** | E2E | AC-01, AC-03, AC-04 | End-to-end Actions Taken complete flow | IT Staff logs in, adds actions taken, edits action, requester logs in and views | `client/e2e/lab-04/actions-taken-flow.spec.ts` | Planned (Issue 6) |
-| **E2E-02** | E2E | AC-05, AC-06, AC-07 | End-to-end Ticket resolution & workflow | Full ticket lifecycle from New through In Progress to Resolved & Closed | `client/e2e/lab-04/ticket-resolution.spec.ts` | Planned (Issue 6) |
-| **E2E-03** | E2E | AC-08, AC-09, AC-10 | End-to-end Dashboards & drill-down | Verifies Requester and Staff dashboards and navigation to filtered queues | `client/e2e/lab-04/dashboards.spec.ts` | Planned (Issue 6) |
+| **E2E-01** | E2E | AC-01, AC-03, AC-04 | End-to-end Actions Taken complete flow | IT Staff logs in, adds actions taken, edits action, requester logs in and views | `client/e2e/lab-04/actions-taken-flow.spec.ts` & `client/tests/lab-04/E2EIntegration.test.tsx` | Pass |
+| **E2E-02** | E2E | AC-05, AC-06, AC-07 | End-to-end Ticket resolution & workflow | Full ticket lifecycle from New through In Progress to Resolved & Closed | `client/e2e/lab-04/ticket-resolution.spec.ts` & `client/tests/lab-04/E2EIntegration.test.tsx` | Pass |
+| **E2E-03** | E2E | AC-08, AC-09, AC-10 | End-to-end Dashboards & drill-down | Verifies Requester and Staff dashboards and navigation to filtered queues | `client/e2e/lab-04/dashboards.spec.ts` & `client/tests/lab-04/E2EIntegration.test.tsx` | Pass |
+| **E2E-04** | E2E | Non-functional, UI | Responsive & WCAG 2.1 AA Accessibility | Mobile viewport layout, touch target sizing, Zen Green palette contrast | `client/e2e/lab-04/responsive.spec.ts` | Pass |
 | **REG-01**| Regression| AC-12, FR-14 | Labs 1-3 Full Regression Suite | Auth, Comments, Notes, Attachments, User Admin remain passing | `server/tests/` & `client/tests/` | Pass |
 
 ---

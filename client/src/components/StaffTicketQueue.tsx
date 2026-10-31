@@ -296,6 +296,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
             <div className="col-6 col-md-2">
               <select
                 id="queue-status-filter"
+                data-testid="queue-status-filter"
                 className="form-select form-select-sm"
                 value={status}
                 onChange={(e) => {
