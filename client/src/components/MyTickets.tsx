@@ -12,11 +12,13 @@ import { useRequester } from "../context/RequesterContext.js";
 interface MyTicketsProps {
   onCreateTicket: () => void;
   onSelectTicket?: (ticketId: number) => void;
+  initialStatus?: TicketStatus | "";
 }
 
 export const MyTickets: React.FC<MyTicketsProps> = ({
   onCreateTicket,
   onSelectTicket,
+  initialStatus,
 }) => {
   const { currentRequester } = useRequester();
 
@@ -39,7 +41,7 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [requestedPriority, setRequestedPriority] = useState<Priority | "">("");
-  const [status, setStatus] = useState<TicketStatus | "">("");
+  const [status, setStatus] = useState<TicketStatus | "">(initialStatus ?? "");
   const [sortBy, setSortBy] = useState<"createdAt" | "ticketNumber" | "updatedAt">("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState<number>(1);

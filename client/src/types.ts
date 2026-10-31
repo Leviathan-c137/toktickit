@@ -328,3 +328,55 @@ export interface UpdateActionTakenInput {
   attachmentNotes?: string;
   expectedUpdatedAt?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Lab 4 — Dashboard Types (FR-10, FR-11, BR-09, BR-10)
+// ---------------------------------------------------------------------------
+
+export interface RequesterDashboardMetrics {
+  openTickets: number;
+  inProgress: number;
+  waitingForRequester: number;
+  resolved: number;
+  closed: number;
+}
+
+export interface RequesterRecentTicket {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  status: TicketStatus;
+  requestedPriority: Priority;
+  category: { id: number; name: string };
+  updatedAt: string;
+}
+
+export interface RequesterDashboardData {
+  metrics: RequesterDashboardMetrics;
+  recentTickets: RequesterRecentTicket[];
+}
+
+export interface StaffDashboardMetrics {
+  newTickets: number;
+  openTickets: number;
+  inProgressTickets: number;
+  waitingForRequesterTickets: number;
+  myAssignedTickets: number;
+  unassignedTickets: number;
+}
+
+export interface StaffRecentTicket {
+  id: number;
+  ticketNumber: string;
+  summary: string;
+  status: TicketStatus;
+  itPriority: Priority;
+  requester: { id: number; fullName: string };
+  owner?: { id: number; fullName: string } | null;
+  updatedAt: string;
+}
+
+export interface StaffDashboardData {
+  metrics: StaffDashboardMetrics;
+  recentTickets: StaffRecentTicket[];
+}

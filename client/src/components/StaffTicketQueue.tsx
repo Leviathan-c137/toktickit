@@ -10,10 +10,14 @@ import { fetchStaffTicketQueue, fetchCategories } from "../api.js";
 
 interface StaffTicketQueueProps {
   onSelectTicket?: (ticketId: number) => void;
+  initialStatus?: string;
+  initialOwnerId?: string;
 }
 
 export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   onSelectTicket,
+  initialStatus,
+  initialOwnerId,
 }) => {
   // Data states
   const [tickets, setTickets] = useState<StaffTicketItem[]>([]);
@@ -31,9 +35,9 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [categoryId, setCategoryId] = useState<string>("All");
-  const [status, setStatus] = useState<string>("All");
+  const [status, setStatus] = useState<string>(initialStatus ?? "All");
   const [itPriority, setItPriority] = useState<string>("All");
-  const [ownerId, setOwnerId] = useState<string>("All");
+  const [ownerId, setOwnerId] = useState<string>(initialOwnerId ?? "All");
   const [sortValue, setSortValue] = useState<string>("createdAt:desc");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
