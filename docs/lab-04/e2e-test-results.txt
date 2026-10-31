@@ -1,0 +1,12 @@
+﻿
+Running 7 tests using 1 worker
+
+  ok 1 [chromium] โ€บ e2e\lab-04\actions-taken-flow.spec.ts:22:3 โ€บ Lab 4 E2E-01: Actions Taken Sub-Record Workflow (AC-01, AC-02, AC-03, AC-04, FR-01 to FR-06) โ€บ E2E-01: IT Staff logs actions, enforces follow-up note, edits record, and Requester views read-only history (4.2s)
+  ok 2 [chromium] โ€บ e2e\lab-04\dashboards.spec.ts:11:3 โ€บ Lab 4 E2E-03: Operational Dashboards & Interactive Drill-Down (AC-08, AC-09, AC-10, FR-10 to FR-13) โ€บ E2E-03: Requester Dashboard and IT Staff Dashboard metric verification and drill-down navigation (2.6s)
+  ok 3 [chromium] โ€บ e2e\lab-04\responsive.spec.ts:36:3 โ€บ Lab 4 Responsive Layout and Accessibility Verification โ€บ Desktop Viewport (1280x800): Dual-column layouts and comprehensive dashboard metrics (1.6s)
+  ok 4 [chromium] โ€บ e2e\lab-04\responsive.spec.ts:62:3 โ€บ Lab 4 Responsive Layout and Accessibility Verification โ€บ Tablet Viewport (820x1180): Flexible card grid and responsive actions taken table (1.6s)
+  ok 5 [chromium] โ€บ e2e\lab-04\responsive.spec.ts:86:3 โ€บ Lab 4 Responsive Layout and Accessibility Verification โ€บ Mobile Viewport (375x667): Stacked cards, touch target sizing, and accessibility (1.6s)
+  ok 6 [chromium] โ€บ e2e\lab-04\responsive.spec.ts:117:3 โ€บ Lab 4 Responsive Layout and Accessibility Verification โ€บ Accessibility: WCAG 2.1 AA Color Contrast Verification for Zen Green Palette (1.3s)
+  ok 7 [chromium] โ€บ e2e\lab-04\ticket-resolution.spec.ts:23:3 โ€บ Lab 4 E2E-02: Ticket Workflow, Permitted Transitions, and Resolution Gate (AC-05, AC-06, AC-07, BR-06, BR-07) โ€บ E2E-02: Full lifecycle โ€” Requester advisory indication, Resolution Gate rejection without action, action logging, and resolution (2.3s)
+
+  7 passed (26.4s)

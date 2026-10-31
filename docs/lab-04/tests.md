@@ -52,3 +52,26 @@ The Lab 4 test strategy establishes comprehensive quality verification spanning 
    cd client
    npx playwright test e2e/lab-04/
    ```
+
+
+---
+
+## 4. End-to-End Test Execution Logs & Evidence
+
+The log below records the official execution evidence of the automated Playwright browser test suite (`client/e2e/lab-04/`) running against live backend and frontend server processes:
+
+```text
+Running 7 tests using 1 worker
+
+  ok 1 [chromium] › e2e\lab-04\actions-taken-flow.spec.ts:22:3 › Lab 4 E2E-01: Actions Taken Sub-Record Workflow (AC-01, AC-02, AC-03, AC-04, FR-01 to FR-06) › E2E-01: IT Staff logs actions, enforces follow-up note, edits record, and Requester views read-only history (4.2s)
+  ok 2 [chromium] › e2e\lab-04\dashboards.spec.ts:11:3 › Lab 4 E2E-03: Operational Dashboards & Interactive Drill-Down (AC-08, AC-09, AC-10, FR-10 to FR-13) › E2E-03: Requester Dashboard and IT Staff Dashboard metric verification and drill-down navigation (2.6s)
+  ok 3 [chromium] › e2e\lab-04\responsive.spec.ts:36:3 › Lab 4 Responsive Layout and Accessibility Verification › Desktop Viewport (1280x800): Dual-column layouts and comprehensive dashboard metrics (1.6s)
+  ok 4 [chromium] › e2e\lab-04\responsive.spec.ts:62:3 › Lab 4 Responsive Layout and Accessibility Verification › Tablet Viewport (820x1180): Flexible card grid and responsive actions taken table (1.6s)
+  ok 5 [chromium] › e2e\lab-04\responsive.spec.ts:86:3 › Lab 4 Responsive Layout and Accessibility Verification › Mobile Viewport (375x667): Stacked cards, touch target sizing, and accessibility (1.6s)
+  ok 6 [chromium] › e2e\lab-04\responsive.spec.ts:117:3 › Lab 4 Responsive Layout and Accessibility Verification › Accessibility: WCAG 2.1 AA Color Contrast Verification for Zen Green Palette (1.3s)
+  ok 7 [chromium] › e2e\lab-04\ticket-resolution.spec.ts:23:3 › Lab 4 E2E-02: Ticket Workflow, Permitted Transitions, and Resolution Gate (AC-05, AC-06, AC-07, BR-06, BR-07) › E2E-02: Full lifecycle — Requester advisory indication, Resolution Gate rejection without action, action logging, and resolution (2.3s)
+
+  7 passed (26.4s)
+```
+
+The raw run evidence log is committed in [`docs/lab-04/e2e-test-results.txt`](file:///c:/Users/admin/Downloads/Lab1_Starter_Scaffold/toktickit/docs/lab-04/e2e-test-results.txt).
