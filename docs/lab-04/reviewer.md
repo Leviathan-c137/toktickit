@@ -28,7 +28,7 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 | **Issue #53** (Issue 4) | `feature/lab4-ticket-workflow` | #59 | [#59](https://github.com/Leviathan-c137/toktickit/pull/59) | @Sxr1n | **Approved** | @Sxr1n |
 | **Issue #54** (Issue 5) | `feature/lab4-role-dashboards` | #60 | [#60](https://github.com/Leviathan-c137/toktickit/pull/60) | @Sxr1n, @Beethoven190 | **Approved** | @Sxr1n |
 | **Issue #55** (Issue 6) | `feature/lab4-e2e-and-release` | #61 | [#61](https://github.com/Leviathan-c137/toktickit/pull/61) | @Sxr1n, @Beethoven190 | **Approved** | @Sxr1n |
-| **Release** | `lab4-staging` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
+| **Release** | `lab4-staging` | #62 | [#62](https://github.com/Leviathan-c137/toktickit/pull/62) | @Beethoven190, @Sxr1n | In Review | Pending |
 
 ---
 
