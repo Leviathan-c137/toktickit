@@ -84,7 +84,7 @@ describe("Lab 4 Issue 4: Ticket Workflow, Status Transitions, and Resolution Gat
   // 1. IT Staff Status State Machine Transitions (BR-06, AC-05)
   // ---------------------------------------------------------------------------
   describe("IT Staff Status Dropdown & Permitted Transitions (BR-06, AC-05)", () => {
-    it("renders only permitted transitions for New status (Open, InProgress, Cancelled)", async () => {
+    it("renders only permitted transitions for New status (Open, Cancelled per BR-06)", async () => {
       vi.spyOn(api, "fetchStaffTicketDetail").mockResolvedValue({
         ...baseStaffTicket,
         status: "New",
@@ -100,14 +100,14 @@ describe("Lab 4 Issue 4: Ticket Workflow, Status Transitions, and Resolution Gat
       expect(select).toBeInTheDocument();
       expect(select.value).toBe("New");
 
-      // Verify permitted options
+      // Verify permitted options (BR-06)
       const optionValues = Array.from(select.options).map((o) => o.value);
       expect(optionValues).toContain("New");
       expect(optionValues).toContain("Open");
-      expect(optionValues).toContain("InProgress");
       expect(optionValues).toContain("Cancelled");
 
       // Verify forbidden states under BR-06 are excluded
+      expect(optionValues).not.toContain("InProgress");
       expect(optionValues).not.toContain("Resolved");
       expect(optionValues).not.toContain("Closed");
       expect(optionValues).not.toContain("WaitingForRequester");
@@ -205,7 +205,7 @@ describe("Lab 4 Issue 4: Ticket Workflow, Status Transitions, and Resolution Gat
       fireEvent.change(select, { target: { value: "InProgress" } });
 
       await waitFor(() => {
-        expect(updateSpy).toHaveBeenCalledWith(15, "InProgress");
+        expect(updateSpy).toHaveBeenCalledWith(15, "InProgress", "2026-10-30T09:30:00.000Z");
         expect(screen.getByText(/Ticket status updated to InProgress/i)).toBeInTheDocument();
       });
     });
@@ -271,7 +271,7 @@ describe("Lab 4 Issue 4: Ticket Workflow, Status Transitions, and Resolution Gat
       fireEvent.click(confirmBtn);
 
       await waitFor(() => {
-        expect(updateSpy).toHaveBeenCalledWith(15, "Cancelled");
+        expect(updateSpy).toHaveBeenCalledWith(15, "Cancelled", "2026-10-30T09:30:00.000Z");
       });
     });
   });

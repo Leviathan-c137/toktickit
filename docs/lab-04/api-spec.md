@@ -211,9 +211,9 @@ Retrieve authoritative operational metrics and recent tickets across the service
 ### 3.3. Ticket Status Workflow Endpoint
 
 #### 3.3.1. `PATCH /api/staff/tickets/:id/status`
-Transition ticket status according to the state machine matrix (BR-06, BR-07).
+Transition ticket status according to the state machine matrix (BR-06, BR-07) with atomic optimistic concurrency enforcement (BR-08).
 
-- **Roles Permitted**: `ITStaff`, `Administrator` (Requesters receive `403 Forbidden`).
+- **Roles Permitted**: `ITStaff`, `Administrator` (Requesters receive `403 Forbidden`). Unauthenticated callers receive `401 Unauthorized`.
 - **Request Body**:
 ```json
 {
@@ -221,15 +221,26 @@ Transition ticket status according to the state machine matrix (BR-06, BR-07).
   "expectedUpdatedAt": "2026-10-29T10:36:00.000Z"
 }
 ```
-- **Error Codes**:
-  - `400 Bad Request`: When requested transition is illegal under BR-06 (e.g. `New` -> `Resolved` without passing through `Open`).
-  - `409 Conflict`: When `expectedUpdatedAt` does not match the database `updatedAt`.
+- **Parameters**:
+  - `status` (*string*, **Required**): Target status from `TicketStatus` enum. Must be a valid transition according to `ALLOWED_STATUS_TRANSITIONS` (BR-06).
+  - `expectedUpdatedAt` (*string / ISO date*, **Required** per BR-08): Optimistic concurrency token representing the timestamp when the ticket was last fetched by the client.
+- **Error Codes & Business Rules**:
+  - `400 Bad Request` (`BAD_REQUEST`):
+    - Missing `status` or invalid status enum value.
+    - Missing `expectedUpdatedAt` token or invalid ISO date string format (BR-08).
+  - `400 Bad Request` (`INVALID_STATUS_TRANSITION`): When requested transition is illegal under BR-06 (e.g. `New` -> `Resolved` or `New` -> `InProgress` without passing through `Open`, or any outbound transition from terminal `Cancelled`).
+  - `400 Bad Request` (`RESOLUTION_GATE_VIOLATION`): When transitioning to `Resolved` without at least one recorded Action Taken (`actionCount == 0`, BR-07).
+  - `403 Forbidden` (`FORBIDDEN`): Caller role is `Requester` (Requesters cannot directly mutate ticket status, BR-06, BR-07).
+  - `404 Not Found` (`NOT_FOUND`): Ticket ID does not exist.
+  - `409 Conflict` (`CONFLICT`): When `expectedUpdatedAt` does not match the authoritative database `updatedAt` timestamp, indicating the ticket has been modified by another concurrent user (BR-08).
 - **Success Response (200 OK)**:
 ```json
 {
   "id": 12,
   "ticketNumber": "TXT-2026-0012",
+  "summary": "Network switch connectivity lost",
   "status": "Resolved",
+  "itPriority": "High",
   "updatedAt": "2026-10-29T11:15:00.000Z"
 }
 ```

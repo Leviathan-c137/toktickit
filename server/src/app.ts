@@ -1544,8 +1544,8 @@ app.get(
 /**
  * Permitted status transitions per Business Rule BR-09
  */
-const ALLOWED_STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
-  [TicketStatus.New]: [TicketStatus.Open, TicketStatus.InProgress, TicketStatus.Cancelled],
+export const ALLOWED_STATUS_TRANSITIONS: Partial<Record<TicketStatus, TicketStatus[]>> = {
+  [TicketStatus.New]: [TicketStatus.Open, TicketStatus.Cancelled],
   [TicketStatus.Open]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
   [TicketStatus.InProgress]: [TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
   [TicketStatus.WaitingForRequester]: [TicketStatus.InProgress, TicketStatus.Resolved, TicketStatus.Cancelled],
@@ -1553,7 +1553,6 @@ const ALLOWED_STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
   [TicketStatus.Closed]: [TicketStatus.Reopened],
   [TicketStatus.Reopened]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
   [TicketStatus.Cancelled]: [], // Terminal state
-  [TicketStatus.Pending]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
 };
 
 /**
@@ -1861,6 +1860,26 @@ app.patch(
       });
     }
 
+    // Mandatory concurrency token (BR-08, Sxr1n review blocker)
+    if (!expectedUpdatedAt) {
+      return res.status(400).json({
+        error: {
+          code: "BAD_REQUEST",
+          message: "expectedUpdatedAt concurrency token is required (BR-08)",
+        },
+      });
+    }
+
+    const parsedExpectedUpdatedAt = new Date(expectedUpdatedAt);
+    if (isNaN(parsedExpectedUpdatedAt.getTime())) {
+      return res.status(400).json({
+        error: {
+          code: "BAD_REQUEST",
+          message: "Invalid expectedUpdatedAt format; must be an ISO date string",
+        },
+      });
+    }
+
     try {
       const ticket = await prisma.ticket.findUnique({
         where: { id: ticketId },
@@ -1872,21 +1891,17 @@ app.patch(
         });
       }
 
-      // Concurrency and stale update detection (BR-08, FR-09, AC-07)
-      if (expectedUpdatedAt) {
-        const clientTimestamp = new Date(expectedUpdatedAt).getTime();
-        const serverTimestamp = new Date(ticket.updatedAt).getTime();
-        if (clientTimestamp !== serverTimestamp) {
-          return res.status(409).json({
-            error: {
-              code: "CONFLICT",
-              message: "Ticket has been modified by another user. Please refresh and review latest changes before updating status.",
-            },
-          });
-        }
+      // Optimistic concurrency check: if database record was modified since client fetched it, return 409 Conflict (BR-08)
+      if (ticket.updatedAt.getTime() !== parsedExpectedUpdatedAt.getTime()) {
+        return res.status(409).json({
+          error: {
+            code: "CONFLICT",
+            message: "Ticket has been modified by another user. Please refresh and review latest changes before updating status.",
+          },
+        });
       }
 
-      // Check transition rules (BR-06, BR-09, AC-05)
+      // Check transition rules (BR-06, AC-05)
       const allowedNext = ALLOWED_STATUS_TRANSITIONS[ticket.status] || [];
       if (!allowedNext.includes(status)) {
         return res.status(400).json({
@@ -1897,9 +1912,45 @@ app.patch(
         });
       }
 
-      const updated = await prisma.ticket.update({
+      // Resolution Gate (BR-07, AC-01, AC-06, Sxr1n review blocker):
+      // Require at least one Action Taken record before transitioning to Resolved
+      if (status === TicketStatus.Resolved) {
+        const actionCount = await prisma.actionTaken.count({
+          where: { ticketId },
+        });
+        if (actionCount === 0) {
+          return res.status(400).json({
+            error: {
+              code: "RESOLUTION_GATE_VIOLATION",
+              message: "Cannot resolve ticket without at least one Action Taken recorded",
+            },
+          });
+        }
+      }
+
+      // Atomic optimistic concurrency update using updateMany with updatedAt predicate (BR-08)
+      const updateResult = await prisma.ticket.updateMany({
+        where: {
+          id: ticketId,
+          updatedAt: parsedExpectedUpdatedAt,
+        },
+        data: {
+          status,
+          updatedAt: new Date(),
+        },
+      });
+
+      if (updateResult.count === 0) {
+        return res.status(409).json({
+          error: {
+            code: "CONFLICT",
+            message: "Ticket has been modified by another user. Please refresh and review latest changes before updating status.",
+          },
+        });
+      }
+
+      const updated = await prisma.ticket.findUnique({
         where: { id: ticketId },
-        data: { status },
         select: {
           id: true,
           ticketNumber: true,
@@ -1909,11 +1960,11 @@ app.patch(
       });
 
       return res.status(200).json({
-        id: updated.id,
-        ticketId: updated.id,
-        ticketNumber: updated.ticketNumber,
-        status: updated.status,
-        updatedAt: updated.updatedAt,
+        id: updated!.id,
+        ticketId: updated!.id,
+        ticketNumber: updated!.ticketNumber,
+        status: updated!.status,
+        updatedAt: updated!.updatedAt,
       });
     } catch (err) {
       return res.status(500).json({

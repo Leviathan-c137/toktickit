@@ -102,8 +102,8 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
     try {
       setUpdatingStatus(true);
       setError(null);
-      const res = await updateTicketStatus(ticket.id, newStatus);
-      setTicket((prev) => (prev ? { ...prev, status: res.status } : null));
+      const res = await updateTicketStatus(ticket.id, newStatus, ticket.updatedAt);
+      setTicket((prev) => (prev ? { ...prev, status: res.status, updatedAt: res.updatedAt || prev.updatedAt } : null));
       showNotification(`Ticket status updated to ${res.status}`);
     } catch (err: any) {
       if (err.status === 409 || err.code === "CONFLICT") {
@@ -131,7 +131,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   const getAllowedTransitions = (currentStatus: TicketStatus): TicketStatus[] => {
     switch (currentStatus) {
       case "New":
-        return ["Open", "InProgress", "Cancelled"];
+        return ["Open", "Cancelled"];
       case "Open":
         return ["InProgress", "WaitingForRequester", "Resolved", "Cancelled"];
       case "InProgress":
@@ -459,18 +459,25 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
         <div
           className="modal d-block"
           tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="status-confirm-modal-title"
           style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
           data-testid="status-confirm-modal"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setPendingStatus(null);
+          }}
         >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content rounded-3 border-0 shadow">
               <div className="modal-header border-bottom-0 pb-0">
-                <h5 className="modal-title fw-bold text-dark">
+                <h5 id="status-confirm-modal-title" className="modal-title fw-bold text-dark">
                   Confirm Status Change to {pendingStatus}
                 </h5>
                 <button
                   type="button"
                   className="btn-close"
+                  aria-label="Close status confirmation dialog"
                   onClick={() => setPendingStatus(null)}
                   disabled={updatingStatus}
                   data-testid="close-status-modal-btn"

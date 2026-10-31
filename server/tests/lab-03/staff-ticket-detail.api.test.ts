@@ -262,52 +262,97 @@ describe("Lab 3 Issue 5: IT Staff Ticket Detail, Ownership & Internal Notes API 
     });
   });
 
-  describe("PATCH /api/staff/tickets/:id/status (FR-12, BR-09)", () => {
-    it("allows valid status transition: New -> InProgress", async () => {
-      const res = await request(app)
+  describe("PATCH /api/staff/tickets/:id/status (FR-12, BR-06, BR-07, BR-08, BR-09)", () => {
+    const prisma = getPrisma();
+
+    it("allows valid status transition: New -> Open -> InProgress", async () => {
+      const current1 = await prisma.ticket.findUnique({ where: { id: ticketId } });
+      const res1 = await request(app)
         .patch(`/api/staff/tickets/${ticketId}/status`)
         .set("Authorization", `Bearer ${staffToken1}`)
-        .send({ status: TicketStatus.InProgress });
+        .send({
+          status: TicketStatus.Open,
+          expectedUpdatedAt: current1!.updatedAt.toISOString(),
+        });
 
-      expect(res.status).toBe(200);
-      expect(res.body.status).toBe(TicketStatus.InProgress);
+      expect(res1.status).toBe(200);
+      expect(res1.body.status).toBe(TicketStatus.Open);
+
+      const current2 = await prisma.ticket.findUnique({ where: { id: ticketId } });
+      const res2 = await request(app)
+        .patch(`/api/staff/tickets/${ticketId}/status`)
+        .set("Authorization", `Bearer ${staffToken1}`)
+        .send({
+          status: TicketStatus.InProgress,
+          expectedUpdatedAt: current2!.updatedAt.toISOString(),
+        });
+
+      expect(res2.status).toBe(200);
+      expect(res2.body.status).toBe(TicketStatus.InProgress);
     });
 
-    it("allows valid status transition: InProgress -> Resolved", async () => {
+    it("allows valid status transition: InProgress -> Resolved (with Action Taken)", async () => {
+      // Seed ActionTaken to satisfy resolution gate
+      await prisma.actionTaken.create({
+        data: {
+          ticketId,
+          performedById: staffUser1Id,
+          actionDateTime: new Date(),
+          description: "Hardware replacement and diagnostic tests completed.",
+          result: "Hardware operational",
+        },
+      });
+
+      const current = await prisma.ticket.findUnique({ where: { id: ticketId } });
       const res = await request(app)
         .patch(`/api/staff/tickets/${ticketId}/status`)
         .set("Authorization", `Bearer ${staffToken1}`)
-        .send({ status: TicketStatus.Resolved });
+        .send({
+          status: TicketStatus.Resolved,
+          expectedUpdatedAt: current!.updatedAt.toISOString(),
+        });
 
       expect(res.status).toBe(200);
       expect(res.body.status).toBe(TicketStatus.Resolved);
     });
 
     it("allows valid status transition: Resolved -> Closed", async () => {
+      const current = await prisma.ticket.findUnique({ where: { id: ticketId } });
       const res = await request(app)
         .patch(`/api/staff/tickets/${ticketId}/status`)
         .set("Authorization", `Bearer ${staffToken1}`)
-        .send({ status: TicketStatus.Closed });
+        .send({
+          status: TicketStatus.Closed,
+          expectedUpdatedAt: current!.updatedAt.toISOString(),
+        });
 
       expect(res.status).toBe(200);
       expect(res.body.status).toBe(TicketStatus.Closed);
     });
 
     it("allows valid status transition: Closed -> Reopened", async () => {
+      const current = await prisma.ticket.findUnique({ where: { id: ticketId } });
       const res = await request(app)
         .patch(`/api/staff/tickets/${ticketId}/status`)
         .set("Authorization", `Bearer ${staffToken1}`)
-        .send({ status: TicketStatus.Reopened });
+        .send({
+          status: TicketStatus.Reopened,
+          expectedUpdatedAt: current!.updatedAt.toISOString(),
+        });
 
       expect(res.status).toBe(200);
       expect(res.body.status).toBe(TicketStatus.Reopened);
     });
 
     it("rejects invalid status transition: Reopened -> Closed directly (BR-09)", async () => {
+      const current = await prisma.ticket.findUnique({ where: { id: ticketId } });
       const res = await request(app)
         .patch(`/api/staff/tickets/${ticketId}/status`)
         .set("Authorization", `Bearer ${staffToken1}`)
-        .send({ status: TicketStatus.Closed });
+        .send({
+          status: TicketStatus.Closed,
+          expectedUpdatedAt: current!.updatedAt.toISOString(),
+        });
 
       expect(res.status).toBe(400);
       expect(res.body.error.code).toBe("INVALID_STATUS_TRANSITION");
