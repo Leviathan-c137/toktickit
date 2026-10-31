@@ -24,8 +24,8 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 |---|---|---|---|---|---|---|
 | **Issue #50** (Issue 1) | `feature/lab4-spec-and-tests` | #56 | [#56](https://github.com/Leviathan-c137/toktickit/pull/56) | @Beethoven190 | **Approved** | @Beethoven190 |
 | **Issue #51** (Issue 2) | `feature/lab4-actions-taken-foundation` | #57 | [#57](https://github.com/Leviathan-c137/toktickit/pull/57) | @Beethoven190 | **Approved** | @Beethoven190 |
-| **Issue #52** (Issue 3) | `feature/lab4-actions-taken-ui` | #58 | [#58](https://github.com/Leviathan-c137/toktickit/pull/58) | @Beethoven190 | Pending Review | Pending |
-| **Issue #53** (Issue 4) | `feature/lab4-ticket-workflow` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
+| **Issue #52** (Issue 3) | `feature/lab4-actions-taken-ui` | #58 | [#58](https://github.com/Leviathan-c137/toktickit/pull/58) | @Sxr1n | **Approved** | @Sxr1n |
+| **Issue #53** (Issue 4) | `feature/lab4-ticket-workflow` | #59 | [#59](https://github.com/Leviathan-c137/toktickit/pull/59) | @Beethoven190 | Pending Review | Pending |
 | **Issue #54** (Issue 5) | `feature/lab4-role-dashboards` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
 | **Issue #55** (Issue 6) | `feature/lab4-final-hardening` | TBD | Pending Review | @Sxr1n | Pending | Pending |
 | **Release** | `lab4-staging` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
@@ -46,5 +46,10 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 
 ### PR #58 (Issue #52: Actions Taken UI on Ticket Detail)
 - **Author Summary:** Built ActionsTaken.tsx component implementing chronological actions list, modal dialog for create/edit, real-time validation (including BR-04 conditional follow-up note validation with automatic focus on toggle as requested by @Beethoven190), HTTP 409 concurrency conflict alert, and Requester read-only mode with empty state. Integrated component into both StaffTicketDetail.tsx and RequesterTicketDetail.tsx. Implemented 7 new tests in client/tests/lab-04/ActionsTaken.test.tsx (UI-01, UI-02) with 100% pass across all 55 client tests and 124 server tests.
+- **Review Feedback:** Comprehensive review and approval by @Sxr1n. Praised the clean Zen Green UI layout, empty states, requester read-only isolation, follow-up note validation, and auto-focus toggle cues. Recommended converting `datetime-local` in edit modal with local offset to prevent timezone shifts across saves, defaulting `isReadOnly` safely when unauthenticated, and re-sorting actions list upon update to guarantee AC-04 chronological integrity for backdated records.
+- **Outcome:** Approved and merged by @Sxr1n into `lab4-staging`.
+
+### PR #59 (Issue #53: Ticket Workflow, Permitted Status Transitions, and Resolution Gate)
+- **Author Summary:** Enforced the formal 8-state ticket transition engine (`server/src/app.ts`) adhering to BR-06, rejecting illegal state leaps with HTTP 400 `INVALID_STATUS_TRANSITION`. Restricted resolution authority exclusively to IT Staff and Administrators (BR-07, AC-06, HTTP 403 for Requesters), preserving purely advisory resolution indications from Requesters. Implemented optimistic concurrency stale-update defense returning HTTP 409 `CONFLICT`. Added dynamic permitted status selector and terminal state (`Cancelled`/`Closed`) confirmation modal to `StaffTicketDetail.tsx` per UI Spec 2.4. Incorporated reviewer feedback from @Sxr1n on timezone offset handling and chronological re-sorting in `ActionsTaken.tsx`. Added 19 backend integration tests in `server/tests/lab-04/ticket-workflow.api.test.ts` (API-05, API-06, API-07) and 9 frontend tests in `client/tests/lab-04/TicketWorkflow.test.tsx` (UI-03), achieving 100% test pass rate across 143 server tests and 64 client tests.
 - **Review Feedback:** *(Awaiting peer reviewer comments)*
 - **Outcome:** *(Pending)*

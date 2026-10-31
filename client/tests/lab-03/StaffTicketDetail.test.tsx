@@ -112,7 +112,7 @@ describe("Lab 3 Issue 5: StaffTicketDetail Component (UI-03, FR-10, FR-11, FR-12
     fireEvent.change(statusSelect, { target: { value: "Resolved" } });
 
     await waitFor(() => {
-      expect(statusSpy).toHaveBeenCalledWith(10, "Resolved");
+      expect(statusSpy).toHaveBeenCalledWith(10, "Resolved", "2026-09-18T11:00:00Z");
     });
   });
 

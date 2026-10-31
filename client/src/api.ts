@@ -442,17 +442,21 @@ export async function updateTicketPriority(
  */
 export async function updateTicketStatus(
   id: number,
-  status: import("./types.js").TicketStatus
-): Promise<{ ticketId: number; status: import("./types.js").TicketStatus }> {
+  status: import("./types.js").TicketStatus,
+  expectedUpdatedAt?: string
+): Promise<{ id: number; ticketId: number; ticketNumber?: string; status: import("./types.js").TicketStatus; updatedAt?: string }> {
   const res = await fetch(`${API_URL}/api/staff/tickets/${id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, expectedUpdatedAt }),
   });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || errorData.message || "Failed to update ticket status");
+    const err: any = new Error(errorData.error?.message || errorData.message || "Failed to update ticket status");
+    err.status = res.status;
+    err.code = errorData.error?.code;
+    throw err;
   }
   return res.json();
 }
