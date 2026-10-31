@@ -278,7 +278,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 type="button"
                 className="btn btn-link p-0 text-start text-decoration-none fw-semibold"
                 style={{ color: "#059669", fontSize: "0.85rem" }}
-                onClick={() => onViewQueue({ ownerId: currentUser ? String(currentUser.id) : undefined })}
+                onClick={() => onViewQueue({ ownerId: currentUser ? String(currentUser.id) : undefined, status: "Active" })}
                 data-testid="drilldown-my-assigned"
               >
                 View all →
@@ -438,3 +438,4 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
     </div>
   );
 };
+

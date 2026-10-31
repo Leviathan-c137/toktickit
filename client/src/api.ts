@@ -674,15 +674,8 @@ export async function updateActionTaken(
 /**
  * Fetch Requester Dashboard metrics and recent tickets (FR-10, BR-09, BR-10).
  */
-export async function fetchRequesterDashboard(
-  requesterId?: number
-): Promise<RequesterDashboardData> {
-  const headers: Record<string, string> = {};
-  if (requesterId) {
-    headers["x-requester-id"] = String(requesterId);
-  }
+export async function fetchRequesterDashboard(): Promise<RequesterDashboardData> {
   const res = await fetch(`${API_URL}/api/requester/dashboard`, {
-    headers,
     credentials: "include",
   });
   if (!res.ok) {

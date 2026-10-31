@@ -293,6 +293,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 }}
               >
                 <option value="All">All Statuses</option>
+                <option value="Active">Active</option>
                 <option value="New">New</option>
                 <option value="Open">Open</option>
                 <option value="InProgress">In Progress</option>
@@ -301,6 +302,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 <option value="Resolved">Resolved</option>
                 <option value="Closed">Closed</option>
                 <option value="Cancelled">Cancelled</option>
+                <option value="Reopened">Reopened</option>
               </select>
             </div>
 

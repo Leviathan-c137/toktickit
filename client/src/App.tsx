@@ -73,6 +73,8 @@ function MainContent() {
     }
     setCurrentUser(null);
     setSelectedTicketId(null);
+    setStaffQueueFilter({});
+    setRequesterStatusFilter("");
     setActiveTab("login");
   };
 
@@ -88,15 +90,21 @@ function MainContent() {
           setActiveTab(tab);
           setSelectedTicketId(null);
           setIsChangingRequester(false);
+          setStaffQueueFilter({});
+          setRequesterStatusFilter("");
         }}
         onChangeRequester={() => {
           setIsChangingRequester(true);
           setSelectedTicketId(null);
+          setStaffQueueFilter({});
+          setRequesterStatusFilter("");
         }}
         user={currentUser}
         onLogout={handleLogout}
         onLoginClick={() => {
           setSelectedTicketId(null);
+          setStaffQueueFilter({});
+          setRequesterStatusFilter("");
           setActiveTab("login");
         }}
       />

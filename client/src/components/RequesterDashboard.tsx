@@ -28,7 +28,7 @@ export const RequesterDashboard: React.FC<RequesterDashboardProps> = ({
   const loadDashboard = useCallback(async () => {
     try {
       setError(null);
-      const res = await fetchRequesterDashboard(currentRequester?.id);
+      const res = await fetchRequesterDashboard();
       setData(res);
     } catch (err: any) {
       setError(err.message || "Failed to load dashboard data");
@@ -36,7 +36,7 @@ export const RequesterDashboard: React.FC<RequesterDashboardProps> = ({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [currentRequester?.id]);
+  }, []);
 
   useEffect(() => {
     setLoading(true);

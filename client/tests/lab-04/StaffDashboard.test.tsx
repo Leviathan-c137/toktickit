@@ -138,7 +138,7 @@ describe("Lab 4 Issue 5: IT Staff Dashboard Component (UI-05, AC-09, AC-10, FR-1
 
     // Drill down to My Assigned
     fireEvent.click(screen.getByTestId("drilldown-my-assigned"));
-    expect(props.onViewQueue).toHaveBeenCalledWith({ ownerId: "5" });
+    expect(props.onViewQueue).toHaveBeenCalledWith({ ownerId: "5", status: "Active" });
   });
 
   it("navigates to staff ticket detail view when clicking a ticket row or view button", async () => {
@@ -217,3 +217,4 @@ describe("Lab 4 Issue 5: IT Staff Dashboard Component (UI-05, AC-09, AC-10, FR-1
     });
   });
 });
+

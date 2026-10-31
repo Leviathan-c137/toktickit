@@ -11,6 +11,7 @@ describe("Lab 4 Issue 5: Requester Dashboard API (API-08, API-10, AC-08, AC-11, 
   let emptyRequester: { id: number; email: string };
   let requester1Token: string;
   let emptyRequesterToken: string;
+  let requester2Token: string;
 
   beforeAll(async () => {
     const prisma = getPrisma();
@@ -70,6 +71,12 @@ describe("Lab 4 Issue 5: Requester Dashboard API (API-08, API-10, AC-08, AC-11, 
       .send({ email: "dash.req1@toktickit.com", password: "Password123!" });
     requester1Token = res1.body.token;
 
+    // Login Requester 2
+    const res2 = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "dash.req2@toktickit.com", password: "Password123!" });
+    requester2Token = res2.body.token;
+
     // Login Empty Requester
     const resEmpty = await request(app)
       .post("/api/auth/login")
@@ -113,6 +120,20 @@ describe("Lab 4 Issue 5: Requester Dashboard API (API-08, API-10, AC-08, AC-11, 
         categoryId: cat!.id,
         relatedSystemId: sys!.id,
         updatedAt: new Date(now - 8000),
+      },
+    });
+    await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-REQ1-REO-${now}`,
+        summary: "Monitor flickering recurring issue",
+        description: "Reopened as issue returned after update",
+        requestedPriority: Priority.Medium,
+        itPriority: Priority.Medium,
+        status: TicketStatus.Reopened,
+        requesterId: requester1.id,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+        updatedAt: new Date(now - 7000),
       },
     });
     await prisma.ticket.create({
@@ -235,29 +256,28 @@ describe("Lab 4 Issue 5: Requester Dashboard API (API-08, API-10, AC-08, AC-11, 
       expect(res.body).toHaveProperty("recentTickets");
 
       const { metrics } = res.body;
-      // 1 New + 1 Open = 2 OpenTickets
-      expect(metrics.openTickets).toBe(2);
+      // 1 New + 1 Open + 1 Reopened = 3 OpenTickets
+      expect(metrics.openTickets).toBe(3);
       expect(metrics.inProgress).toBe(2);
       expect(metrics.waitingForRequester).toBe(1);
       expect(metrics.resolved).toBe(2);
       expect(metrics.closed).toBe(1);
     });
 
-    it("supports backward compatibility x-requester-id header", async () => {
+    it("rejects requests providing only x-requester-id header without JWT token with 401 Unauthorized (BR-09)", async () => {
       const res = await request(app)
         .get("/api/requester/dashboard")
         .set("x-requester-id", String(requester1.id));
 
-      expect(res.status).toBe(200);
-      expect(res.body.metrics.openTickets).toBe(2);
-      expect(res.body.metrics.inProgress).toBe(2);
+      expect(res.status).toBe(401);
+      expect(res.body.error.code).toBe("UNAUTHORIZED");
     });
 
-    it("enforces strict requester data isolation (BR-09)", async () => {
+    it("enforces strict requester data isolation using JWT session (BR-09)", async () => {
       // Requester 2 only has 1 InProgress ticket
       const res = await request(app)
         .get("/api/requester/dashboard")
-        .set("x-requester-id", String(requester2.id));
+        .set("Authorization", `Bearer ${requester2Token}`);
 
       expect(res.status).toBe(200);
       expect(res.body.metrics.inProgress).toBe(1);
@@ -322,3 +342,4 @@ describe("Lab 4 Issue 5: Requester Dashboard API (API-08, API-10, AC-08, AC-11, 
     });
   });
 });
+

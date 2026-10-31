@@ -81,6 +81,158 @@ describe("Lab 4 Issue 5: IT Staff Dashboard API (API-09, AC-09, BR-10, BR-12, FR
       .post("/api/auth/login")
       .send({ email: "dash.requester@toktickit.com", password: "Password123!" });
     requesterToken = reqRes.body.token;
+
+    // Clean up any previous test tickets created by staff-dashboard suite
+    await prisma.ticket.deleteMany({
+      where: {
+        OR: [
+          { ownerId: itStaffUser.id },
+          { ticketNumber: { startsWith: "TKT-STAFFDASH-" } },
+        ],
+      },
+    });
+
+    const cat = await prisma.category.findFirst();
+    const sys = await prisma.relatedSystem.findFirst();
+    const reqUser = await prisma.user.findFirst({ where: { email: "dash.requester@toktickit.com" } });
+    const now = Date.now();
+
+    // Seed known set of tickets:
+    // 1. New ticket, unassigned
+    const tNew = await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-STAFFDASH-NEW-${now}`,
+        summary: "Staff Dash New Ticket",
+        description: "Deterministic test new ticket",
+        requestedPriority: Priority.Medium,
+        itPriority: Priority.Medium,
+        status: TicketStatus.New,
+        requesterId: reqUser!.id,
+        ownerId: null,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+      },
+    });
+    createdTicketIds.push(tNew.id);
+
+    // 2. Open ticket, unassigned
+    const tOpen = await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-STAFFDASH-OPEN-${now}`,
+        summary: "Staff Dash Open Ticket",
+        description: "Deterministic test open ticket",
+        requestedPriority: Priority.High,
+        itPriority: Priority.High,
+        status: TicketStatus.Open,
+        requesterId: reqUser!.id,
+        ownerId: null,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+      },
+    });
+    createdTicketIds.push(tOpen.id);
+
+    // 3. Reopened ticket, assigned to staff
+    const tReopen = await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-STAFFDASH-REO-${now}`,
+        summary: "Staff Dash Reopened Ticket",
+        description: "Deterministic test reopened ticket",
+        requestedPriority: Priority.Urgent,
+        itPriority: Priority.Urgent,
+        status: TicketStatus.Reopened,
+        requesterId: reqUser!.id,
+        ownerId: itStaffUser.id,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+      },
+    });
+    createdTicketIds.push(tReopen.id);
+
+    // 4. InProgress ticket, assigned to staff
+    const tInp = await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-STAFFDASH-INP-${now}`,
+        summary: "Staff Dash InProgress Ticket",
+        description: "Deterministic test inprogress ticket",
+        requestedPriority: Priority.High,
+        itPriority: Priority.High,
+        status: TicketStatus.InProgress,
+        requesterId: reqUser!.id,
+        ownerId: itStaffUser.id,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+      },
+    });
+    createdTicketIds.push(tInp.id);
+
+    // 5. WaitingForRequester ticket, assigned to staff
+    const tWait = await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-STAFFDASH-WAIT-${now}`,
+        summary: "Staff Dash Waiting Ticket",
+        description: "Deterministic test waiting ticket",
+        requestedPriority: Priority.Low,
+        itPriority: Priority.Low,
+        status: TicketStatus.WaitingForRequester,
+        requesterId: reqUser!.id,
+        ownerId: itStaffUser.id,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+      },
+    });
+    createdTicketIds.push(tWait.id);
+
+    // 6. Pending ticket, unassigned
+    const tPend = await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-STAFFDASH-PEND-${now}`,
+        summary: "Staff Dash Pending Ticket",
+        description: "Deterministic test pending ticket",
+        requestedPriority: Priority.Medium,
+        itPriority: Priority.Medium,
+        status: TicketStatus.Pending,
+        requesterId: reqUser!.id,
+        ownerId: null,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+      },
+    });
+    createdTicketIds.push(tPend.id);
+
+    // 7. Closed ticket, assigned to staff (must NOT be counted in myAssignedTickets!)
+    const tClosed = await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-STAFFDASH-CLO-${now}`,
+        summary: "Staff Dash Closed Ticket",
+        description: "Deterministic test closed ticket",
+        requestedPriority: Priority.Low,
+        itPriority: Priority.Low,
+        status: TicketStatus.Closed,
+        requesterId: reqUser!.id,
+        ownerId: itStaffUser.id,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+      },
+    });
+    createdTicketIds.push(tClosed.id);
+
+    // 8. Cancelled ticket, assigned to staff (must NOT be counted in myAssignedTickets!)
+    const tCancelled = await prisma.ticket.create({
+      data: {
+        ticketNumber: `TKT-STAFFDASH-CAN-${now}`,
+        summary: "Staff Dash Cancelled Ticket",
+        description: "Deterministic test cancelled ticket",
+        requestedPriority: Priority.Low,
+        itPriority: Priority.Low,
+        status: TicketStatus.Cancelled,
+        requesterId: reqUser!.id,
+        ownerId: itStaffUser.id,
+        categoryId: cat!.id,
+        relatedSystemId: sys!.id,
+      },
+    });
+    createdTicketIds.push(tCancelled.id);
   });
 
   afterAll(async () => {
@@ -131,7 +283,8 @@ describe("Lab 4 Issue 5: IT Staff Dashboard API (API-09, AC-09, BR-10, BR-12, FR
   // API-09: Authoritative Operational Metrics (AC-09, BR-10, FR-11)
   // ---------------------------------------------------------------------------
   describe("API-09: Authoritative Queue Metrics & Schema (AC-09, BR-10, FR-11)", () => {
-    it("returns metrics object with all 6 operational counters", async () => {
+    it("returns authoritative metrics verifying exact counts for known tickets and excludes inactive assigned (AC-09, BR-10)", async () => {
+      const prisma = getPrisma();
       const res = await request(app)
         .get("/api/staff/dashboard")
         .set("Authorization", `Bearer ${itStaffToken}`);
@@ -141,65 +294,68 @@ describe("Lab 4 Issue 5: IT Staff Dashboard API (API-09, AC-09, BR-10, BR-12, FR
       expect(res.body).toHaveProperty("recentTickets");
 
       const { metrics } = res.body;
-      expect(typeof metrics.newTickets).toBe("number");
-      expect(typeof metrics.openTickets).toBe("number");
-      expect(typeof metrics.inProgressTickets).toBe("number");
-      expect(typeof metrics.waitingForRequesterTickets).toBe("number");
-      expect(typeof metrics.myAssignedTickets).toBe("number");
-      expect(typeof metrics.unassignedTickets).toBe("number");
 
-      expect(metrics.newTickets).toBeGreaterThanOrEqual(0);
-      expect(metrics.openTickets).toBeGreaterThanOrEqual(0);
-      expect(metrics.inProgressTickets).toBeGreaterThanOrEqual(0);
-      expect(metrics.waitingForRequesterTickets).toBeGreaterThanOrEqual(0);
-      expect(metrics.myAssignedTickets).toBeGreaterThanOrEqual(0);
-      expect(metrics.unassignedTickets).toBeGreaterThanOrEqual(0);
+      // itStaffUser has 3 active assigned tickets (Reopened, InProgress, WaitingForRequester)
+      // and 2 inactive assigned tickets (Closed, Cancelled).
+      // AC-10 / BR-10: myAssignedTickets must count ONLY active tickets!
+      expect(metrics.myAssignedTickets).toBe(3);
+
+      // Verify exact metrics match authoritative database counts
+      const [dbNew, dbOpen, dbInProgress, dbWaiting, dbUnassigned] = await Promise.all([
+        prisma.ticket.count({ where: { status: TicketStatus.New } }),
+        prisma.ticket.count({ where: { status: { in: [TicketStatus.Open, TicketStatus.Reopened] } } }),
+        prisma.ticket.count({ where: { status: TicketStatus.InProgress } }),
+        prisma.ticket.count({
+          where: { status: { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] } },
+        }),
+        prisma.ticket.count({ where: { ownerId: null } }),
+      ]);
+
+      expect(metrics.newTickets).toBe(dbNew);
+      expect(metrics.openTickets).toBe(dbOpen);
+      expect(metrics.inProgressTickets).toBe(dbInProgress);
+      expect(metrics.waitingForRequesterTickets).toBe(dbWaiting);
+      expect(metrics.unassignedTickets).toBe(dbUnassigned);
+
+      // Verify expected minimums from seeded known tickets
+      expect(metrics.newTickets).toBeGreaterThanOrEqual(1);
+      expect(metrics.openTickets).toBeGreaterThanOrEqual(2); // 1 Open + 1 Reopened
+      expect(metrics.inProgressTickets).toBeGreaterThanOrEqual(1);
+      expect(metrics.waitingForRequesterTickets).toBeGreaterThanOrEqual(2); // 1 Waiting + 1 Pending
+      expect(metrics.unassignedTickets).toBeGreaterThanOrEqual(3); // New + Open + Pending
     });
 
-    it("accurately calculates myAssignedTickets specific to the calling staff member", async () => {
-      const prisma = getPrisma();
-      const cat = await prisma.category.findFirst();
-      const sys = await prisma.relatedSystem.findFirst();
-      const reqUser = await prisma.user.findFirst({ where: { role: Role.Requester } });
-
-      // Create a ticket assigned specifically to itStaffUser
-      const assignedTicket = await prisma.ticket.create({
-        data: {
-          ticketNumber: `TKT-ASSIGNED-${Date.now()}`,
-          summary: "Ticket assigned to staff member",
-          description: "Testing myAssigned count metric",
-          requestedPriority: Priority.High,
-          itPriority: Priority.High,
-          status: TicketStatus.InProgress,
-          requesterId: reqUser!.id,
-          ownerId: itStaffUser.id,
-          categoryId: cat!.id,
-          relatedSystemId: sys!.id,
-        },
-      });
-      createdTicketIds.push(assignedTicket.id);
-
-      const staffRes = await request(app)
+    it("verifies user isolation for myAssignedTickets and recent tickets schema", async () => {
+      // Query dashboard as adminUser who has 0 assigned tickets
+      const adminRes = await request(app)
         .get("/api/staff/dashboard")
-        .set("Authorization", `Bearer ${itStaffToken}`);
+        .set("Authorization", `Bearer ${adminToken}`);
 
-      // itStaffUser sees at least 1 ticket assigned to them
-      expect(staffRes.body.metrics.myAssignedTickets).toBeGreaterThanOrEqual(1);
+      expect(adminRes.status).toBe(200);
+      expect(adminRes.body.metrics.myAssignedTickets).toBe(0);
 
-      // Verify recentTickets includes the newly created ticket
-      expect(Array.isArray(staffRes.body.recentTickets)).toBe(true);
-      const recent = staffRes.body.recentTickets;
+      // Verify recentTickets includes tickets sorted by updatedAt desc
+      expect(Array.isArray(adminRes.body.recentTickets)).toBe(true);
+      const recent = adminRes.body.recentTickets;
       expect(recent.length).toBeLessThanOrEqual(5);
 
-      const first = recent[0];
-      expect(first).toHaveProperty("id");
-      expect(first).toHaveProperty("ticketNumber");
-      expect(first).toHaveProperty("summary");
-      expect(first).toHaveProperty("status");
-      expect(first).toHaveProperty("itPriority");
-      expect(first).toHaveProperty("requester");
-      expect(first.requester).toHaveProperty("fullName");
-      expect(first).toHaveProperty("updatedAt");
+      if (recent.length > 0) {
+        const first = recent[0];
+        expect(first).toHaveProperty("id");
+        expect(first).toHaveProperty("ticketNumber");
+        expect(first).toHaveProperty("summary");
+        expect(first).toHaveProperty("status");
+        expect(first).toHaveProperty("itPriority");
+        expect(first).toHaveProperty("requester");
+        expect(first.requester).toHaveProperty("fullName");
+        expect(first).toHaveProperty("updatedAt");
+
+        for (let i = 0; i < recent.length - 1; i++) {
+          const t1 = new Date(recent[i].updatedAt).getTime();
+          const t2 = new Date(recent[i + 1].updatedAt).getTime();
+          expect(t1).toBeGreaterThanOrEqual(t2);
+        }
+      }
     });
   });
 });

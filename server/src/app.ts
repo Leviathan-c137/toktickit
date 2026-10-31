@@ -717,9 +717,11 @@ app.get(
         "Open",
         "InProgress",
         "Pending",
+        "WaitingForRequester",
         "Resolved",
         "Closed",
         "Cancelled",
+        "Reopened",
       ];
       if (req.query.status !== undefined) {
         const status = req.query.status as string;
@@ -730,7 +732,13 @@ app.get(
             message: "Invalid status filter",
           });
         }
-        where.status = status;
+        if (status === "Open") {
+          where.status = { in: [TicketStatus.New, TicketStatus.Open, TicketStatus.Reopened] };
+        } else if (status === "WaitingForRequester") {
+          where.status = { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] };
+        } else {
+          where.status = status;
+        }
       }
 
       // 4. Count total matching items
@@ -1456,7 +1464,15 @@ app.get(
 
       // Status filter
       if (status && typeof status === "string" && status !== "All") {
-        where.status = status;
+        if (status === "Open") {
+          where.status = { in: [TicketStatus.Open, TicketStatus.Reopened] };
+        } else if (status === "WaitingForRequester") {
+          where.status = { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] };
+        } else if (status === "Active") {
+          where.status = { notIn: [TicketStatus.Closed, TicketStatus.Cancelled] };
+        } else {
+          where.status = status;
+        }
       }
 
       // IT Priority filter
@@ -2822,23 +2838,16 @@ app.patch(
  */
 app.get(
   "/api/requester/dashboard",
-  requireRequester as any,
-  async (req: AuthenticatedRequest, res: Response) => {
+  authenticateToken,
+  requireRole(Role.Requester),
+  async (req: AuthenticatedUserRequest, res: Response) => {
     const prisma = getPrisma();
-    const requesterId = req.requester?.id;
-
-    if (!requesterId) {
-      return res.status(401).json({
-        statusCode: 401,
-        error: "Unauthorized",
-        message: "Authentication or requester identification required",
-      });
-    }
+    const requesterId = req.user!.id;
 
     try {
       const [openTickets, inProgress, waitingForRequester, resolved, closed] = await Promise.all([
         prisma.ticket.count({
-          where: { requesterId, status: { in: [TicketStatus.New, TicketStatus.Open] } },
+          where: { requesterId, status: { in: [TicketStatus.New, TicketStatus.Open, TicketStatus.Reopened] } },
         }),
         prisma.ticket.count({
           where: { requesterId, status: TicketStatus.InProgress },
@@ -2909,12 +2918,17 @@ app.get(
         unassignedTickets,
       ] = await Promise.all([
         prisma.ticket.count({ where: { status: TicketStatus.New } }),
-        prisma.ticket.count({ where: { status: TicketStatus.Open } }),
+        prisma.ticket.count({ where: { status: { in: [TicketStatus.Open, TicketStatus.Reopened] } } }),
         prisma.ticket.count({ where: { status: TicketStatus.InProgress } }),
         prisma.ticket.count({
           where: { status: { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] } },
         }),
-        prisma.ticket.count({ where: { ownerId: currentUserId } }),
+        prisma.ticket.count({
+          where: {
+            ownerId: currentUserId,
+            status: { notIn: [TicketStatus.Closed, TicketStatus.Cancelled] },
+          },
+        }),
         prisma.ticket.count({ where: { ownerId: null } }),
       ]);
 
