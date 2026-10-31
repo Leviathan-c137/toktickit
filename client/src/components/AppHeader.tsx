@@ -67,12 +67,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           className="navbar-brand d-flex align-items-center text-white cursor-pointer me-4"
           style={{ cursor: "pointer", fontWeight: 600, fontSize: "1.2rem" }}
           onClick={() => {
-            if (isAdmin) {
-              setActiveTab("user-management");
-            } else if (isStaff) {
-              setActiveTab("staff-queue");
+            if (isAdmin || isStaff) {
+              setActiveTab("staff-dashboard");
             } else {
-              setActiveTab("tickets");
+              setActiveTab("requester-dashboard");
             }
           }}
         >
@@ -102,6 +100,23 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <ul className="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
           {user ? (
             <>
+              {(isAdmin || isStaff) && (
+                <li className="nav-item">
+                  <button
+                    type="button"
+                    data-testid="nav-staff-dashboard"
+                    className={`btn btn-sm ${
+                      activeTab === "staff-dashboard"
+                        ? "btn-light text-dark fw-semibold"
+                        : "btn-link text-white-50 text-decoration-none"
+                    }`}
+                    onClick={() => setActiveTab("staff-dashboard")}
+                  >
+                    Dashboard
+                  </button>
+                </li>
+              )}
+
               {isAdmin && (
                 <>
                   <li className="nav-item">
@@ -157,6 +172,20 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   <li className="nav-item">
                     <button
                       type="button"
+                      data-testid="nav-requester-dashboard"
+                      className={`btn btn-sm ${
+                        activeTab === "requester-dashboard"
+                          ? "btn-light text-dark fw-semibold"
+                          : "btn-link text-white-50 text-decoration-none"
+                      }`}
+                      onClick={() => setActiveTab("requester-dashboard")}
+                    >
+                      Dashboard
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      type="button"
                       data-testid="nav-my-tickets"
                       className={`btn btn-sm ${
                         activeTab === "tickets" || activeTab === "ticket-detail"
@@ -187,6 +216,20 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </>
           ) : currentRequester ? (
             <>
+              <li className="nav-item">
+                <button
+                  type="button"
+                  data-testid="nav-requester-dashboard"
+                  className={`btn btn-sm ${
+                    activeTab === "requester-dashboard"
+                      ? "btn-light text-dark fw-semibold"
+                      : "btn-link text-white-50 text-decoration-none"
+                  }`}
+                  onClick={() => setActiveTab("requester-dashboard")}
+                >
+                  Dashboard
+                </button>
+              </li>
               <li className="nav-item">
                 <button
                   type="button"

@@ -1,4 +1,4 @@
-import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket, User, PublicComment, ActionTaken, CreateActionTakenInput, UpdateActionTakenInput } from "./types.js";
+import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket, User, PublicComment, ActionTaken, CreateActionTakenInput, UpdateActionTakenInput, RequesterDashboardData, StaffDashboardData } from "./types.js";
 export * from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -667,6 +667,41 @@ export async function updateActionTaken(
     err.status = res.status;
     err.code = errorData.error?.code;
     throw err;
+  }
+  return res.json();
+}
+
+/**
+ * Fetch Requester Dashboard metrics and recent tickets (FR-10, BR-09, BR-10).
+ */
+export async function fetchRequesterDashboard(
+  requesterId?: number
+): Promise<RequesterDashboardData> {
+  const headers: Record<string, string> = {};
+  if (requesterId) {
+    headers["x-requester-id"] = String(requesterId);
+  }
+  const res = await fetch(`${API_URL}/api/requester/dashboard`, {
+    headers,
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch requester dashboard");
+  }
+  return res.json();
+}
+
+/**
+ * Fetch IT Staff & Admin Dashboard metrics and recent tickets (FR-11, BR-10).
+ */
+export async function fetchStaffDashboard(): Promise<StaffDashboardData> {
+  const res = await fetch(`${API_URL}/api/staff/dashboard`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch staff dashboard");
   }
   return res.json();
 }
