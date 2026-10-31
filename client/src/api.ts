@@ -1,4 +1,4 @@
-import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket, User, PublicComment } from "./types.js";
+import { Attachment, Category, RelatedSystem, Requester, SystemStatus, Ticket, User, PublicComment, ActionTaken, CreateActionTakenInput, UpdateActionTakenInput, RequesterDashboardData, StaffDashboardData } from "./types.js";
 export * from "./types.js";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -442,17 +442,21 @@ export async function updateTicketPriority(
  */
 export async function updateTicketStatus(
   id: number,
-  status: import("./types.js").TicketStatus
-): Promise<{ ticketId: number; status: import("./types.js").TicketStatus }> {
+  status: import("./types.js").TicketStatus,
+  expectedUpdatedAt?: string
+): Promise<{ id: number; ticketId: number; ticketNumber?: string; status: import("./types.js").TicketStatus; updatedAt?: string }> {
   const res = await fetch(`${API_URL}/api/staff/tickets/${id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, expectedUpdatedAt }),
   });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || errorData.message || "Failed to update ticket status");
+    const err: any = new Error(errorData.error?.message || errorData.message || "Failed to update ticket status");
+    err.status = res.status;
+    err.code = errorData.error?.code;
+    throw err;
   }
   return res.json();
 }
@@ -597,7 +601,100 @@ export async function resetAdminUserPassword(
   return res.json();
 }
 
+// ---------------------------------------------------------------------------
+// Lab 4 Issue 3 — Actions Taken API Functions (AC-01, AC-02, AC-03, AC-04, AC-07)
+// ---------------------------------------------------------------------------
 
+/**
+ * Fetch all Actions Taken for a ticket in stable chronological order.
+ */
+export async function fetchActionsTaken(ticketId: number): Promise<ActionTaken[]> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch actions taken");
+  }
+  const data = await res.json();
+  return Array.isArray(data) ? data : data.actions || [];
+}
 
+/**
+ * Record a new Action Taken under a ticket (IT Staff & Admin only).
+ */
+export async function createActionTaken(
+  ticketId: number,
+  data: CreateActionTakenInput
+): Promise<ActionTaken> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    const err: any = new Error(errorData.error?.message || errorData.message || "Failed to create action taken");
+    err.status = res.status;
+    err.code = errorData.error?.code;
+    throw err;
+  }
+  return res.json();
+}
 
+/**
+ * Update an existing Action Taken record (IT Staff & Admin only).
+ */
+export async function updateActionTaken(
+  ticketId: number,
+  actionId: number,
+  data: UpdateActionTakenInput
+): Promise<ActionTaken> {
+  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/actions/${actionId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    const err: any = new Error(errorData.error?.message || errorData.message || "Failed to update action taken");
+    err.status = res.status;
+    err.code = errorData.error?.code;
+    throw err;
+  }
+  return res.json();
+}
 
+/**
+ * Fetch Requester Dashboard metrics and recent tickets (FR-10, BR-09, BR-10).
+ */
+export async function fetchRequesterDashboard(): Promise<RequesterDashboardData> {
+  const res = await fetch(`${API_URL}/api/requester/dashboard`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch requester dashboard");
+  }
+  return res.json();
+}
+
+/**
+ * Fetch IT Staff & Admin Dashboard metrics and recent tickets (FR-11, BR-10).
+ */
+export async function fetchStaffDashboard(): Promise<StaffDashboardData> {
+  const res = await fetch(`${API_URL}/api/staff/dashboard`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || errorData.message || "Failed to fetch staff dashboard");
+  }
+  return res.json();
+}

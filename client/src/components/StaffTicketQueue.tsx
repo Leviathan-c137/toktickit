@@ -10,10 +10,14 @@ import { fetchStaffTicketQueue, fetchCategories } from "../api.js";
 
 interface StaffTicketQueueProps {
   onSelectTicket?: (ticketId: number) => void;
+  initialStatus?: string;
+  initialOwnerId?: string;
 }
 
 export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   onSelectTicket,
+  initialStatus,
+  initialOwnerId,
 }) => {
   // Data states
   const [tickets, setTickets] = useState<StaffTicketItem[]>([]);
@@ -31,12 +35,23 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [categoryId, setCategoryId] = useState<string>("All");
-  const [status, setStatus] = useState<string>("All");
+  const [status, setStatus] = useState<string>(initialStatus ?? "All");
   const [itPriority, setItPriority] = useState<string>("All");
-  const [ownerId, setOwnerId] = useState<string>("All");
+  const [ownerId, setOwnerId] = useState<string>(initialOwnerId ?? "All");
   const [sortValue, setSortValue] = useState<string>("createdAt:desc");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
+
+  // Sync initial filters when props change
+  useEffect(() => {
+    setStatus(initialStatus ?? "All");
+    setPage(1);
+  }, [initialStatus]);
+
+  useEffect(() => {
+    setOwnerId(initialOwnerId ?? "All");
+    setPage(1);
+  }, [initialOwnerId]);
 
   // Debounce search input
   useEffect(() => {
@@ -239,6 +254,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 <span className="input-group-text bg-light border-end-0">🔍</span>
                 <input
                   id="queue-search"
+                  data-testid="search-tickets-input"
                   type="text"
                   className="form-control border-start-0"
                   placeholder="Search ticket # or summary..."
@@ -281,6 +297,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
             <div className="col-6 col-md-2">
               <select
                 id="queue-status-filter"
+                data-testid="queue-status-filter"
                 className="form-select form-select-sm"
                 value={status}
                 onChange={(e) => {
@@ -289,6 +306,9 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 }}
               >
                 <option value="All">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="OpenGroup">Open & Reopened</option>
+                <option value="WaitingGroup">Waiting (Waiting & Pending)</option>
                 <option value="New">New</option>
                 <option value="Open">Open</option>
                 <option value="InProgress">In Progress</option>
@@ -297,6 +317,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 <option value="Resolved">Resolved</option>
                 <option value="Closed">Closed</option>
                 <option value="Cancelled">Cancelled</option>
+                <option value="Reopened">Reopened</option>
               </select>
             </div>
 
@@ -434,7 +455,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
               </thead>
               <tbody>
                 {tickets.map((t) => (
-                  <tr key={t.id} style={{ cursor: onSelectTicket ? "pointer" : "default" }}>
+                  <tr key={t.id} data-testid={`ticket-row-${t.id}`} style={{ cursor: onSelectTicket ? "pointer" : "default" }}>
                     <td className="fw-semibold">
                       <span
                         className="text-decoration-none"

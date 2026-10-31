@@ -9,6 +9,7 @@ import {
 } from "../api.js";
 import { useRequester } from "../context/RequesterContext.js";
 import { PublicComments } from "./PublicComments.js";
+import { ActionsTaken } from "./ActionsTaken.js";
 
 interface RequesterTicketDetailProps {
   ticketId: number;
@@ -257,6 +258,7 @@ export const RequesterTicketDetail: React.FC<RequesterTicketDetailProps> = ({
     return (
       <span
         className="badge rounded-pill px-3 py-1"
+        data-testid="ticket-status-badge"
         style={{ backgroundColor: c.bg, color: c.color, fontWeight: 600, fontSize: "0.85rem" }}
       >
         {ticketStatus}
@@ -636,6 +638,9 @@ export const RequesterTicketDetail: React.FC<RequesterTicketDetailProps> = ({
           )}
         </div>
       )}
+
+      {/* Actions Taken Section (AC-03, FR-05, Read-Only for Requester) */}
+      <ActionsTaken ticketId={ticket.id} readOnly={true} />
 
       {/* Public Comments Section (FR-07, BR-04) */}
       <PublicComments ticketId={ticket.id} />

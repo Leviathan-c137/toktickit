@@ -18,13 +18,13 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "cmd /c npm run dev --prefix ../server",
+      command: process.platform === "win32" ? "cmd /c npm run dev --prefix ../server" : "npm run dev --prefix ../server",
       url: "http://localhost:3000/api/health",
       reuseExistingServer: true,
       timeout: 60 * 1000,
     },
     {
-      command: "cmd /c npm run dev",
+      command: process.platform === "win32" ? "cmd /c npm run dev" : "npm run dev",
       url: "http://localhost:5173",
       reuseExistingServer: true,
       timeout: 60 * 1000,
