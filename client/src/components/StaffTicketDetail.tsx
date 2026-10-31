@@ -215,7 +215,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
         </div>
       )}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show py-2 mb-3 small" role="alert">
+        <div className="alert alert-danger alert-dismissible fade show py-2 mb-3 small" role="alert" data-testid="ticket-detail-error">
           ⚠ {error}
         </div>
       )}
@@ -317,6 +317,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                 <span className="small text-muted fw-semibold">Status:</span>
                 <select
                   id="ticket-status-select"
+                  data-testid="ticket-status-select"
                   aria-label="Status Transition Dropdown"
                   className="form-select form-select-sm fw-semibold"
                   style={{ minWidth: "140px" }}

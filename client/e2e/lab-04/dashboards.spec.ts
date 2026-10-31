@@ -22,6 +22,11 @@ test.describe("Lab 4 E2E-03: Operational Dashboards & Interactive Drill-Down (AC
     await page.locator('[data-testid="login-password"]').fill("Password123!");
     await page.locator('[data-testid="login-submit"]').click();
 
+    // Navigate to Requester Dashboard
+    const reqDashNav = page.locator('[data-testid="nav-requester-dashboard"]');
+    await expect(reqDashNav).toBeVisible({ timeout: 10000 });
+    await reqDashNav.click();
+
     // Verify Requester Dashboard layout
     await expect(page.locator('[data-testid="requester-dashboard"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('[data-testid="metric-card-open"]')).toBeVisible();
@@ -31,7 +36,7 @@ test.describe("Lab 4 E2E-03: Operational Dashboards & Interactive Drill-Down (AC
 
     // Test drill-down: My Open card -> My Tickets filtered to OpenGroup
     await page.locator('[data-testid="drilldown-open"]').click();
-    await expect(page.locator("h2", { hasText: "My Tickets" })).toBeVisible({ timeout: 8000 });
+    await expect(page.locator("h1", { hasText: "My Tickets" })).toBeVisible({ timeout: 8000 });
     const reqStatusFilter = page.locator('[data-testid="status-filter"]');
     await expect(reqStatusFilter).toHaveValue("OpenGroup");
 
@@ -42,7 +47,9 @@ test.describe("Lab 4 E2E-03: Operational Dashboards & Interactive Drill-Down (AC
     // -------------------------------------------------------------------------
     // 2. Sign Out Requester & Sign In IT Staff (Michael Brown)
     // -------------------------------------------------------------------------
-    await page.locator('[data-testid="header-sign-out-btn"]').click();
+    const signOutBtn = page.locator('[data-testid="logout-btn"]');
+    await expect(signOutBtn).toBeVisible();
+    await signOutBtn.click();
     await expect(page.locator('[data-testid="login-email"]')).toBeVisible({ timeout: 8000 });
 
     await page.locator('[data-testid="login-email"]').fill("mbrown@toktickit.com");
@@ -79,3 +86,4 @@ test.describe("Lab 4 E2E-03: Operational Dashboards & Interactive Drill-Down (AC
     await expect(page.locator("#queue-status-filter")).toHaveValue("All");
   });
 });
+

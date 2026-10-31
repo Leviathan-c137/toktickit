@@ -18,13 +18,25 @@ import { User } from "./types.js";
 type UiState = "idle" | "loading" | "success" | "error";
 
 function MainContent() {
-  const { currentRequester } = useRequester();
+  const { currentRequester, selectRequester, clearRequester } = useRequester();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<string>("tickets");
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [isChangingRequester, setIsChangingRequester] = useState<boolean>(false);
   const [staffQueueFilter, setStaffQueueFilter] = useState<{ status?: string; ownerId?: string }>({});
   const [requesterStatusFilter, setRequesterStatusFilter] = useState<string>("");
+
+  // Sync authenticated Requester into RequesterContext for seamless portal access
+  useEffect(() => {
+    if (currentUser && currentUser.role === "Requester") {
+      selectRequester({
+        id: currentUser.id,
+        fullName: currentUser.fullName,
+        email: currentUser.email,
+        department: currentUser.department || undefined,
+      });
+    }
+  }, [currentUser]);
 
   // Check existing auth session on mount
   useEffect(() => {
@@ -72,6 +84,7 @@ function MainContent() {
       // ignore
     }
     setCurrentUser(null);
+    clearRequester();
     setSelectedTicketId(null);
     setStaffQueueFilter({});
     setRequesterStatusFilter("");

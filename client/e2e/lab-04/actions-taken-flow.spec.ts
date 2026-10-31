@@ -1,6 +1,17 @@
 import { test, expect } from "@playwright/test";
+import { createIsolatedTicket, TestTicket } from "./test-helpers.js";
 
 test.describe("Lab 4 E2E-01: Actions Taken Sub-Record Workflow (AC-01, AC-02, AC-03, AC-04, FR-01 to FR-06)", () => {
+  let ticket: TestTicket;
+
+  test.beforeAll(async ({ request }) => {
+    ticket = await createIsolatedTicket(request, {
+      summary: `E2E-01 Patch cord replacement on rack 4B ${Date.now()}`,
+      description: "Port 24 is flapping every 30 seconds affecting core lab connectivity.",
+      status: "Open",
+    });
+  });
+
   test.beforeEach(async ({ page, context }) => {
     await context.clearCookies();
     await page.goto("/");
@@ -27,16 +38,21 @@ test.describe("Lab 4 E2E-01: Actions Taken Sub-Record Workflow (AC-01, AC-02, AC
     await expect(page.locator('[data-testid="user-profile-badge"]')).toContainText("Michael Brown");
 
     // -------------------------------------------------------------------------
-    // 2. Open First Ticket in Queue
+    // 2. Open Specific Isolated Ticket in Queue
     // -------------------------------------------------------------------------
-    const firstDetailBtn = page.locator("table tbody tr button", { hasText: "View Detail" }).first();
-    await expect(firstDetailBtn).toBeVisible({ timeout: 5000 });
-    await firstDetailBtn.click();
+    const searchInput = page.locator('[data-testid="search-tickets-input"]');
+    await searchInput.fill(ticket.ticketNumber);
+
+    const ticketRow = page.locator(`[data-testid="ticket-row-${ticket.id}"]`);
+    await expect(ticketRow).toBeVisible({ timeout: 10000 });
+
+    const detailBtn = ticketRow.locator("button", { hasText: "View Detail" });
+    await expect(detailBtn).toBeVisible();
+    await detailBtn.click();
 
     // Verify Ticket Detail loaded with Actions Taken card
-    await expect(page.locator(".breadcrumb-item.active")).toBeVisible({ timeout: 10000 });
-    const actionsHeader = page.locator('h5:has-text("Technical Actions Taken")');
-    await expect(actionsHeader).toBeVisible();
+    await expect(page.locator(".breadcrumb-item.active")).toContainText(ticket.ticketNumber, { timeout: 10000 });
+    await expect(page.locator('[data-testid="actions-taken-card"]')).toBeVisible();
 
     const addActionBtn = page.locator('[data-testid="add-action-taken-btn"]');
     await expect(addActionBtn).toBeVisible();
@@ -74,7 +90,8 @@ test.describe("Lab 4 E2E-01: Actions Taken Sub-Record Workflow (AC-01, AC-02, AC
     // -------------------------------------------------------------------------
     // 4. Edit the Created Action Taken (AC-01, FR-02)
     // -------------------------------------------------------------------------
-    const editBtn = page.locator('[data-testid^="edit-action-btn-"]').last();
+    const editBtn = page.locator('[data-testid^="edit-action-btn-"]').first();
+    await expect(editBtn).toBeVisible();
     await editBtn.click();
     await expect(page.locator('[data-testid="action-modal"]')).toBeVisible();
 
@@ -84,9 +101,10 @@ test.describe("Lab 4 E2E-01: Actions Taken Sub-Record Workflow (AC-01, AC-02, AC
     await expect(page.locator('[data-testid="actions-taken-list"]')).toContainText("Replaced damaged patch cord on rack 4B and tested latency.");
 
     // -------------------------------------------------------------------------
-    // 5. Sign Out
+    // 5. Sign Out using correct logout-btn
     // -------------------------------------------------------------------------
-    const signOutBtn = page.locator('[data-testid="header-sign-out-btn"]');
+    const signOutBtn = page.locator('[data-testid="logout-btn"]');
+    await expect(signOutBtn).toBeVisible();
     await signOutBtn.click();
     await expect(page.locator('[data-testid="login-email"]')).toBeVisible({ timeout: 8000 });
 
@@ -97,23 +115,23 @@ test.describe("Lab 4 E2E-01: Actions Taken Sub-Record Workflow (AC-01, AC-02, AC
     await page.locator('[data-testid="login-password"]').fill("Password123!");
     await page.locator('[data-testid="login-submit"]').click();
 
-    // Verify Requester Dashboard loaded
-    await expect(page.locator('[data-testid="requester-dashboard"]')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('[data-testid="user-profile-badge"]')).toContainText("Jennifer Anderson");
+    // Verify Requester Dashboard or Nav loaded
+    await expect(page.locator('[data-testid="user-profile-badge"]')).toContainText("Jennifer Anderson", { timeout: 10000 });
 
     // Navigate to My Tickets
     await page.locator('[data-testid="nav-my-tickets"]').click();
-    await expect(page.locator("h2", { hasText: "My Tickets" })).toBeVisible({ timeout: 8000 });
+    await expect(page.locator("h1", { hasText: "My Tickets" })).toBeVisible({ timeout: 8000 });
 
-    // Open first ticket detail
-    const reqTicketRow = page.locator("table tbody tr").first();
-    if (await reqTicketRow.isVisible()) {
-      await reqTicketRow.click();
+    // Open the exact ticket edited by staff
+    const reqTicketRow = page.locator(`[data-testid="ticket-row-${ticket.id}"]`);
+    await expect(reqTicketRow).toBeVisible({ timeout: 8000 });
+    await reqTicketRow.click();
 
-      // Verify Actions Taken is in Read-Only Mode (AC-03, FR-05, FR-06)
-      await expect(page.locator('[data-testid="requester-readonly-badge"]')).toBeVisible({ timeout: 8000 });
-      await expect(page.locator('[data-testid="add-action-taken-btn"]')).toBeHidden();
-      await expect(page.locator('[data-testid^="edit-action-btn-"]')).toBeHidden();
-    }
+    // Verify Actions Taken is in Read-Only Mode (AC-03, FR-05, FR-06)
+    await expect(page.locator('[data-testid="actions-taken-card"]')).toBeVisible({ timeout: 8000 });
+    await expect(page.locator('[data-testid="requester-readonly-badge"]')).toBeVisible();
+    await expect(page.locator('[data-testid="add-action-taken-btn"]')).toBeHidden();
+    await expect(page.locator('[data-testid^="edit-action-btn-"]')).toBeHidden();
+    await expect(page.locator('[data-testid="actions-taken-list"]')).toContainText("Replaced damaged patch cord on rack 4B and tested latency.");
   });
 });

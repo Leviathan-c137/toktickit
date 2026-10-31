@@ -258,6 +258,7 @@ export const RequesterTicketDetail: React.FC<RequesterTicketDetailProps> = ({
     return (
       <span
         className="badge rounded-pill px-3 py-1"
+        data-testid="ticket-status-badge"
         style={{ backgroundColor: c.bg, color: c.color, fontWeight: 600, fontSize: "0.85rem" }}
       >
         {ticketStatus}
