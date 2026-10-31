@@ -722,6 +722,8 @@ app.get(
         "Closed",
         "Cancelled",
         "Reopened",
+        "OpenGroup",
+        "WaitingGroup",
       ];
       if (req.query.status !== undefined) {
         const status = req.query.status as string;
@@ -732,9 +734,9 @@ app.get(
             message: "Invalid status filter",
           });
         }
-        if (status === "Open") {
+        if (status === "OpenGroup") {
           where.status = { in: [TicketStatus.New, TicketStatus.Open, TicketStatus.Reopened] };
-        } else if (status === "WaitingForRequester") {
+        } else if (status === "WaitingGroup") {
           where.status = { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] };
         } else {
           where.status = status;
@@ -1464,9 +1466,9 @@ app.get(
 
       // Status filter
       if (status && typeof status === "string" && status !== "All") {
-        if (status === "Open") {
+        if (status === "OpenGroup") {
           where.status = { in: [TicketStatus.Open, TicketStatus.Reopened] };
-        } else if (status === "WaitingForRequester") {
+        } else if (status === "WaitingGroup") {
           where.status = { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] };
         } else if (status === "Active") {
           where.status = { notIn: [TicketStatus.Closed, TicketStatus.Cancelled] };

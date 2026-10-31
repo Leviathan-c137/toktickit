@@ -357,5 +357,52 @@ describe("Lab 4 Issue 5: IT Staff Dashboard API (API-09, AC-09, BR-10, BR-12, FR
         }
       }
     });
+
+    it("verifies OpenGroup, WaitingGroup, and Active drill-down filters match dashboard card counts (AC-10)", async () => {
+      // 1. OpenGroup drill-down: returns Open and Reopened
+      const openGroupRes = await request(app)
+        .get("/api/staff/tickets?status=OpenGroup")
+        .set("Authorization", `Bearer ${itStaffToken}`);
+      expect(openGroupRes.status).toBe(200);
+      for (const t of openGroupRes.body.tickets) {
+        expect([TicketStatus.Open, TicketStatus.Reopened]).toContain(t.status);
+      }
+
+      // 2. WaitingGroup drill-down: returns WaitingForRequester and Pending
+      const waitingGroupRes = await request(app)
+        .get("/api/staff/tickets?status=WaitingGroup")
+        .set("Authorization", `Bearer ${itStaffToken}`);
+      expect(waitingGroupRes.status).toBe(200);
+      for (const t of waitingGroupRes.body.tickets) {
+        expect([TicketStatus.WaitingForRequester, TicketStatus.Pending]).toContain(t.status);
+      }
+
+      // 3. Active drill-down for itStaffUser: returns exactly 3 active tickets (excluding Closed & Cancelled)
+      const activeRes = await request(app)
+        .get(`/api/staff/tickets?ownerId=${itStaffUser.id}&status=Active`)
+        .set("Authorization", `Bearer ${itStaffToken}`);
+      expect(activeRes.status).toBe(200);
+      expect(activeRes.body.pagination.totalCount).toBe(3);
+      for (const t of activeRes.body.tickets) {
+        expect([TicketStatus.Closed, TicketStatus.Cancelled]).not.toContain(t.status);
+      }
+
+      // 4. Exact single-status filters retain single-status meaning:
+      const singleOpenRes = await request(app)
+        .get("/api/staff/tickets?status=Open")
+        .set("Authorization", `Bearer ${itStaffToken}`);
+      expect(singleOpenRes.status).toBe(200);
+      for (const t of singleOpenRes.body.tickets) {
+        expect(t.status).toBe(TicketStatus.Open);
+      }
+
+      const singleWaitingRes = await request(app)
+        .get("/api/staff/tickets?status=WaitingForRequester")
+        .set("Authorization", `Bearer ${itStaffToken}`);
+      expect(singleWaitingRes.status).toBe(200);
+      for (const t of singleWaitingRes.body.tickets) {
+        expect(t.status).toBe(TicketStatus.WaitingForRequester);
+      }
+    });
   });
 });

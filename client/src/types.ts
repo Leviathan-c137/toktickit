@@ -134,7 +134,7 @@ export interface TicketFilters {
   search?: string;
   categoryId?: number;
   requestedPriority?: Priority;
-  status?: TicketStatus;
+  status?: TicketStatus | string;
   sortBy?: "createdAt" | "ticketNumber" | "updatedAt";
   sortOrder?: "asc" | "desc";
   page?: number;

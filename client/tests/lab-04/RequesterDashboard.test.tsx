@@ -114,7 +114,7 @@ describe("Lab 4 Issue 5: Requester Dashboard Component (UI-04, AC-08, AC-10, FR-
 
     // Drill down to Open
     fireEvent.click(screen.getByTestId("drilldown-open"));
-    expect(props.onViewMyTickets).toHaveBeenCalledWith("Open");
+    expect(props.onViewMyTickets).toHaveBeenCalledWith("OpenGroup");
 
     // Drill down to InProgress
     fireEvent.click(screen.getByTestId("drilldown-inprogress"));

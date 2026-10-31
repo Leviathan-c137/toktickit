@@ -191,7 +191,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 type="button"
                 className="btn btn-link p-0 text-start text-decoration-none fw-semibold"
                 style={{ color: "#006B3C", fontSize: "0.85rem" }}
-                onClick={() => onViewQueue({ status: "Open" })}
+                onClick={() => onViewQueue({ status: "OpenGroup" })}
                 data-testid="drilldown-open"
               >
                 View all →
@@ -249,7 +249,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
                 type="button"
                 className="btn btn-link p-0 text-start text-decoration-none fw-semibold"
                 style={{ color: "#7C3AED", fontSize: "0.85rem" }}
-                onClick={() => onViewQueue({ status: "WaitingForRequester" })}
+                onClick={() => onViewQueue({ status: "WaitingGroup" })}
                 data-testid="drilldown-waiting"
               >
                 View all →

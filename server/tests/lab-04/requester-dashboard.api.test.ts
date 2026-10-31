@@ -291,6 +291,29 @@ describe("Lab 4 Issue 5: Requester Dashboard API (API-08, API-10, AC-08, AC-11, 
       expect(res.body.recentTickets[0].summary).toContain("Requester 2 ticket");
     });
 
+    it("verifies OpenGroup drill-down returns New, Open, and Reopened tickets matching dashboard count (AC-10)", async () => {
+      // 1. Query OpenGroup drill-down
+      const groupRes = await request(app)
+        .get("/api/tickets?status=OpenGroup")
+        .set("Authorization", `Bearer ${requester1Token}`);
+
+      expect(groupRes.status).toBe(200);
+      expect(groupRes.body.items.length).toBe(3);
+      const statuses = groupRes.body.items.map((t: any) => t.status);
+      expect(statuses).toContain(TicketStatus.New);
+      expect(statuses).toContain(TicketStatus.Open);
+      expect(statuses).toContain(TicketStatus.Reopened);
+
+      // 2. Query exact single status "Open"
+      const singleRes = await request(app)
+        .get("/api/tickets?status=Open")
+        .set("Authorization", `Bearer ${requester1Token}`);
+
+      expect(singleRes.status).toBe(200);
+      expect(singleRes.body.items.length).toBe(1);
+      expect(singleRes.body.items[0].status).toBe(TicketStatus.Open);
+    });
+
     it("returns recentTickets with proper schema and descending sort order by updatedAt", async () => {
       const res = await request(app)
         .get("/api/requester/dashboard")

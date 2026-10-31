@@ -42,6 +42,17 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
 
+  // Sync initial filters when props change
+  useEffect(() => {
+    setStatus(initialStatus ?? "All");
+    setPage(1);
+  }, [initialStatus]);
+
+  useEffect(() => {
+    setOwnerId(initialOwnerId ?? "All");
+    setPage(1);
+  }, [initialOwnerId]);
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -294,6 +305,8 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
               >
                 <option value="All">All Statuses</option>
                 <option value="Active">Active</option>
+                <option value="OpenGroup">Open & Reopened</option>
+                <option value="WaitingGroup">Waiting (Waiting & Pending)</option>
                 <option value="New">New</option>
                 <option value="Open">Open</option>
                 <option value="InProgress">In Progress</option>

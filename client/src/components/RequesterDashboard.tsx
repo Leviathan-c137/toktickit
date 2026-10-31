@@ -166,7 +166,7 @@ export const RequesterDashboard: React.FC<RequesterDashboardProps> = ({
                 type="button"
                 className="btn btn-link p-0 text-start text-decoration-none fw-semibold"
                 style={{ color: "#006B3C", fontSize: "0.85rem" }}
-                onClick={() => onViewMyTickets("Open")}
+                onClick={() => onViewMyTickets("OpenGroup")}
                 data-testid="drilldown-open"
               >
                 View all →

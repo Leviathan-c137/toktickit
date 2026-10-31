@@ -12,7 +12,7 @@ import { useRequester } from "../context/RequesterContext.js";
 interface MyTicketsProps {
   onCreateTicket: () => void;
   onSelectTicket?: (ticketId: number) => void;
-  initialStatus?: TicketStatus | "";
+  initialStatus?: TicketStatus | string;
 }
 
 export const MyTickets: React.FC<MyTicketsProps> = ({
@@ -41,11 +41,17 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [categoryId, setCategoryId] = useState<number | "">("");
   const [requestedPriority, setRequestedPriority] = useState<Priority | "">("");
-  const [status, setStatus] = useState<TicketStatus | "">(initialStatus ?? "");
+  const [status, setStatus] = useState<TicketStatus | string>(initialStatus ?? "");
   const [sortBy, setSortBy] = useState<"createdAt" | "ticketNumber" | "updatedAt">("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
+
+  // Sync initialStatus when prop changes
+  useEffect(() => {
+    setStatus(initialStatus ?? "");
+    setPage(1);
+  }, [initialStatus]);
 
   // Debounce search input
   useEffect(() => {
@@ -369,20 +375,24 @@ export const MyTickets: React.FC<MyTicketsProps> = ({
                 className="form-select bg-light"
                 value={status}
                 onChange={(e) => {
-                  setStatus(e.target.value as TicketStatus | "");
+                  setStatus(e.target.value);
                   setPage(1);
                 }}
                 data-testid="status-filter"
                 aria-label="Filter by Status"
               >
                 <option value="">All Statuses</option>
+                <option value="OpenGroup">Open (New, Open, Reopened)</option>
+                <option value="WaitingGroup">Waiting (Waiting & Pending)</option>
                 <option value="New">New</option>
                 <option value="Open">Open</option>
                 <option value="InProgress">In Progress</option>
                 <option value="Pending">Pending</option>
+                <option value="WaitingForRequester">Waiting for Requester</option>
                 <option value="Resolved">Resolved</option>
                 <option value="Closed">Closed</option>
                 <option value="Cancelled">Cancelled</option>
+                <option value="Reopened">Reopened</option>
               </select>
             </div>
 

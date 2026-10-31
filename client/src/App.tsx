@@ -24,7 +24,7 @@ function MainContent() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [isChangingRequester, setIsChangingRequester] = useState<boolean>(false);
   const [staffQueueFilter, setStaffQueueFilter] = useState<{ status?: string; ownerId?: string }>({});
-  const [requesterStatusFilter, setRequesterStatusFilter] = useState<TicketStatus | "">("");
+  const [requesterStatusFilter, setRequesterStatusFilter] = useState<string>("");
 
   // Check existing auth session on mount
   useEffect(() => {
@@ -240,21 +240,41 @@ function MainContent() {
                 }}
               />
             ) : activeTab === "requester-dashboard" ? (
-              <RequesterDashboard
-                onCreateTicket={() => {
-                  setSelectedTicketId(null);
-                  setActiveTab("create-ticket");
-                }}
-                onViewMyTickets={(statusFilter) => {
-                  setSelectedTicketId(null);
-                  setRequesterStatusFilter((statusFilter as TicketStatus) || "");
-                  setActiveTab("tickets");
-                }}
-                onSelectTicket={(ticketId) => {
-                  setSelectedTicketId(ticketId);
-                  setActiveTab("ticket-detail");
-                }}
-              />
+              !currentUser ? (
+                <div className="container py-5 text-center" data-testid="requester-dashboard-login-required">
+                  <div className="card shadow-sm border-0 rounded-3 p-4 mx-auto" style={{ maxWidth: 480 }}>
+                    <div className="mb-3" style={{ fontSize: "2.5rem" }}>🔒</div>
+                    <h2 className="h5 fw-bold mb-2">Login Required</h2>
+                    <p className="text-muted mb-4">Please log in to your account to view your personal operational dashboard.</p>
+                    <button
+                      className="btn btn-success fw-semibold"
+                      style={{ backgroundColor: "#006B3C", borderColor: "#006B3C" }}
+                      onClick={() => {
+                        setSelectedTicketId(null);
+                        setActiveTab("login");
+                      }}
+                    >
+                      Go to Login
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <RequesterDashboard
+                  onCreateTicket={() => {
+                    setSelectedTicketId(null);
+                    setActiveTab("create-ticket");
+                  }}
+                  onViewMyTickets={(statusFilter) => {
+                    setSelectedTicketId(null);
+                    setRequesterStatusFilter(statusFilter || "");
+                    setActiveTab("tickets");
+                  }}
+                  onSelectTicket={(ticketId) => {
+                    setSelectedTicketId(ticketId);
+                    setActiveTab("ticket-detail");
+                  }}
+                />
+              )
             ) : activeTab === "create-ticket" ? (
               <CreateTicket
                 onSuccess={() => {

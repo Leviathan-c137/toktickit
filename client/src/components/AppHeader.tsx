@@ -69,8 +69,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           onClick={() => {
             if (isAdmin || isStaff) {
               setActiveTab("staff-dashboard");
-            } else {
+            } else if (isRequester) {
               setActiveTab("requester-dashboard");
+            } else {
+              setActiveTab("tickets");
             }
           }}
         >
@@ -216,20 +218,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </>
           ) : currentRequester ? (
             <>
-              <li className="nav-item">
-                <button
-                  type="button"
-                  data-testid="nav-requester-dashboard"
-                  className={`btn btn-sm ${
-                    activeTab === "requester-dashboard"
-                      ? "btn-light text-dark fw-semibold"
-                      : "btn-link text-white-50 text-decoration-none"
-                  }`}
-                  onClick={() => setActiveTab("requester-dashboard")}
-                >
-                  Dashboard
-                </button>
-              </li>
               <li className="nav-item">
                 <button
                   type="button"

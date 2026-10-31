@@ -126,7 +126,7 @@ describe("Lab 4 Issue 5: IT Staff Dashboard Component (UI-05, AC-09, AC-10, FR-1
 
     // Drill down to Open
     fireEvent.click(screen.getByTestId("drilldown-open"));
-    expect(props.onViewQueue).toHaveBeenCalledWith({ status: "Open" });
+    expect(props.onViewQueue).toHaveBeenCalledWith({ status: "OpenGroup" });
 
     // Drill down to InProgress
     fireEvent.click(screen.getByTestId("drilldown-inprogress"));
@@ -134,7 +134,7 @@ describe("Lab 4 Issue 5: IT Staff Dashboard Component (UI-05, AC-09, AC-10, FR-1
 
     // Drill down to Waiting Req
     fireEvent.click(screen.getByTestId("drilldown-waiting"));
-    expect(props.onViewQueue).toHaveBeenCalledWith({ status: "WaitingForRequester" });
+    expect(props.onViewQueue).toHaveBeenCalledWith({ status: "WaitingGroup" });
 
     // Drill down to My Assigned
     fireEvent.click(screen.getByTestId("drilldown-my-assigned"));
