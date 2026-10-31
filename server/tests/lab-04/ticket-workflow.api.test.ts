@@ -136,7 +136,12 @@ describe("Lab 4 Issue 4: Ticket Workflow, Permitted Status Transitions, and Reso
         TicketStatus.Cancelled,
       ]);
       expect(ALLOWED_STATUS_TRANSITIONS[TicketStatus.Cancelled]).toEqual([]);
-      expect(ALLOWED_STATUS_TRANSITIONS).not.toHaveProperty("Pending");
+      expect(ALLOWED_STATUS_TRANSITIONS[TicketStatus.Pending]).toEqual([
+        TicketStatus.InProgress,
+        TicketStatus.WaitingForRequester,
+        TicketStatus.Resolved,
+        TicketStatus.Cancelled,
+      ]);
     });
   });
 
@@ -338,6 +343,36 @@ describe("Lab 4 Issue 4: Ticket Workflow, Permitted Status Transitions, and Reso
         .send({ status: TicketStatus.Open, expectedUpdatedAt: await getExpectedUpdatedAt(ticketId) });
       expect(resAfterCancel.status).toBe(400);
       expect(resAfterCancel.body.error.code).toBe("INVALID_STATUS_TRANSITION");
+    });
+
+    it("allows valid status transition from legacy Pending status: Pending -> InProgress", async () => {
+      const prisma = getPrisma();
+      const cat = await prisma.category.findFirst();
+      const sys = await prisma.relatedSystem.findFirst();
+      const pendingTicket = await prisma.ticket.create({
+        data: {
+          ticketNumber: `TKT-PENDING-${Date.now()}`,
+          summary: "Legacy Pending Status Transition Ticket",
+          description: "Testing backwards compatibility transition from Pending",
+          requestedPriority: Priority.Low,
+          itPriority: Priority.Low,
+          status: TicketStatus.Pending,
+          requesterId: requesterUserId,
+          categoryId: cat!.id,
+          relatedSystemId: sys!.id,
+        },
+      });
+
+      const res = await request(app)
+        .patch(`/api/staff/tickets/${pendingTicket.id}/status`)
+        .set("Authorization", `Bearer ${itStaffToken}`)
+        .send({
+          status: TicketStatus.InProgress,
+          expectedUpdatedAt: pendingTicket.updatedAt.toISOString(),
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe(TicketStatus.InProgress);
     });
   });
 

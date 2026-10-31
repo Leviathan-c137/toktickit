@@ -146,6 +146,8 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
         return ["InProgress", "WaitingForRequester", "Resolved", "Cancelled"];
       case "Cancelled":
         return [];
+      case "Pending":
+        return ["InProgress", "WaitingForRequester", "Resolved", "Cancelled"];
       default:
         return ["InProgress", "Resolved", "Closed", "Cancelled"];
     }

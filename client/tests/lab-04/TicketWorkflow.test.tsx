@@ -160,6 +160,27 @@ describe("Lab 4 Issue 4: Ticket Workflow, Status Transitions, and Resolution Gat
       expect(optionValues).not.toContain("Open");
     });
 
+    it("renders permitted transitions for legacy Pending status (InProgress, WaitingForRequester, Resolved, Cancelled)", async () => {
+      vi.spyOn(api, "fetchStaffTicketDetail").mockResolvedValue({
+        ...baseStaffTicket,
+        status: "Pending",
+      });
+
+      render(<StaffTicketDetail ticketId={15} onBack={vi.fn()} />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("TKT-2026-000015").length).toBeGreaterThan(0);
+      });
+
+      const select = document.getElementById("ticket-status-select") as HTMLSelectElement;
+      const optionValues = Array.from(select.options).map((o) => o.value);
+      expect(optionValues).toContain("Pending");
+      expect(optionValues).toContain("InProgress");
+      expect(optionValues).toContain("WaitingForRequester");
+      expect(optionValues).toContain("Resolved");
+      expect(optionValues).toContain("Cancelled");
+    });
+
     it("disables status dropdown for terminal Cancelled status", async () => {
       vi.spyOn(api, "fetchStaffTicketDetail").mockResolvedValue({
         ...baseStaffTicket,

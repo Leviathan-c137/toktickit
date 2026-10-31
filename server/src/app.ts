@@ -1544,7 +1544,7 @@ app.get(
 /**
  * Permitted status transitions per Business Rule BR-09
  */
-export const ALLOWED_STATUS_TRANSITIONS: Partial<Record<TicketStatus, TicketStatus[]>> = {
+export const ALLOWED_STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
   [TicketStatus.New]: [TicketStatus.Open, TicketStatus.Cancelled],
   [TicketStatus.Open]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
   [TicketStatus.InProgress]: [TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
@@ -1553,6 +1553,7 @@ export const ALLOWED_STATUS_TRANSITIONS: Partial<Record<TicketStatus, TicketStat
   [TicketStatus.Closed]: [TicketStatus.Reopened],
   [TicketStatus.Reopened]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
   [TicketStatus.Cancelled]: [], // Terminal state
+  [TicketStatus.Pending]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
 };
 
 /**

@@ -222,7 +222,7 @@ Transition ticket status according to the state machine matrix (BR-06, BR-07) wi
 }
 ```
 - **Parameters**:
-  - `status` (*string*, **Required**): Target status from `TicketStatus` enum. Must be a valid transition according to `ALLOWED_STATUS_TRANSITIONS` (BR-06).
+  - `status` (*string*, **Required**): Target status from `TicketStatus` enum. Must be a valid transition according to `ALLOWED_STATUS_TRANSITIONS` (BR-06, including legacy `Pending` transition rows).
   - `expectedUpdatedAt` (*string / ISO date*, **Required** per BR-08): Optimistic concurrency token representing the timestamp when the ticket was last fetched by the client.
 - **Error Codes & Business Rules**:
   - `400 Bad Request` (`BAD_REQUEST`):
