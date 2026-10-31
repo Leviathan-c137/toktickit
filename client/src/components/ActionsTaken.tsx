@@ -10,7 +10,7 @@ interface ActionsTakenProps {
 
 export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, readOnly }) => {
   const { user } = useAuth();
-  const isReadOnly = readOnly !== undefined ? readOnly : user?.role === "Requester";
+  const isReadOnly = readOnly !== undefined ? readOnly : (!user || user.role === "Requester");
 
   const [actions, setActions] = useState<ActionTaken[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,6 +40,14 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, readOnly }
     const now = new Date();
     const offset = now.getTimezoneOffset();
     const local = new Date(now.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+  };
+
+  const toLocalDateTimeInput = (isoStr?: string | null) => {
+    if (!isoStr) return getCurrentLocalDateTime();
+    const d = new Date(isoStr);
+    const offset = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - offset * 60000);
     return local.toISOString().slice(0, 16);
   };
 
@@ -84,7 +92,7 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, readOnly }
 
   const openEditModal = (action: ActionTaken) => {
     setEditingAction(action);
-    const dateVal = action.actionDateTime ? new Date(action.actionDateTime).toISOString().slice(0, 16) : getCurrentLocalDateTime();
+    const dateVal = toLocalDateTimeInput(action.actionDateTime);
     setActionDateTime(dateVal);
     setDescription(action.description);
     setResult(action.result);
@@ -160,9 +168,12 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, readOnly }
         };
 
         const updated = await updateActionTaken(ticketId, editingAction.id, updatePayload);
-        setActions((prev) =>
-          prev.map((a) => (a.id === updated.id ? updated : a))
-        );
+        setActions((prev) => {
+          const list = prev.map((a) => (a.id === updated.id ? updated : a));
+          return list.sort(
+            (a, b) => new Date(a.actionDateTime).getTime() - new Date(b.actionDateTime).getTime()
+          );
+        });
         showNotification("Action Taken updated successfully.");
       } else {
         // Create flow (AC-01, AC-02, BR-01, BR-02)
@@ -176,7 +187,12 @@ export const ActionsTaken: React.FC<ActionsTakenProps> = ({ ticketId, readOnly }
         };
 
         const created = await createActionTaken(ticketId, createPayload);
-        setActions((prev) => [...prev, created]);
+        setActions((prev) => {
+          const list = [...prev, created];
+          return list.sort(
+            (a, b) => new Date(a.actionDateTime).getTime() - new Date(b.actionDateTime).getTime()
+          );
+        });
         showNotification("Action Taken recorded successfully.");
       }
       setIsModalOpen(false);

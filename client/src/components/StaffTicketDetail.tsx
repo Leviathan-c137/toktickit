@@ -31,6 +31,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
   const [updatingOwner, setUpdatingOwner] = useState<boolean>(false);
   const [updatingPriority, setUpdatingPriority] = useState<boolean>(false);
   const [updatingStatus, setUpdatingStatus] = useState<boolean>(false);
+  const [pendingStatus, setPendingStatus] = useState<TicketStatus | null>(null);
   const [activeTab, setActiveTab] = useState<"comments" | "notes">("comments");
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -95,7 +96,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
     }
   };
 
-  // Status Transition
+  // Status Transition (BR-06, BR-07, BR-08, AC-05, AC-07)
   const handleStatusChange = async (newStatus: TicketStatus) => {
     if (!ticket || newStatus === ticket.status) return;
     try {
@@ -105,13 +106,28 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       setTicket((prev) => (prev ? { ...prev, status: res.status } : null));
       showNotification(`Ticket status updated to ${res.status}`);
     } catch (err: any) {
-      setError(err.message || "Failed to update status");
+      if (err.status === 409 || err.code === "CONFLICT") {
+        setError("Conflict detected: This ticket has been modified by another user. Please refresh and review latest changes before updating status.");
+      } else {
+        setError(err.message || "Failed to update status");
+      }
     } finally {
       setUpdatingStatus(false);
+      setPendingStatus(null);
     }
   };
 
-  // Permitted status transitions helper
+  // Confirmation gate for terminal or irreversible statuses (Cancelled, Closed)
+  const handleStatusSelectChange = (newStatus: TicketStatus) => {
+    if (!ticket || newStatus === ticket.status) return;
+    if (newStatus === "Cancelled" || newStatus === "Closed") {
+      setPendingStatus(newStatus);
+    } else {
+      handleStatusChange(newStatus);
+    }
+  };
+
+  // Permitted status transitions helper (BR-06)
   const getAllowedTransitions = (currentStatus: TicketStatus): TicketStatus[] => {
     switch (currentStatus) {
       case "New":
@@ -127,7 +143,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
       case "Closed":
         return ["Reopened"];
       case "Reopened":
-        return ["InProgress", "Resolved"];
+        return ["InProgress", "WaitingForRequester", "Resolved", "Cancelled"];
       case "Cancelled":
         return [];
       default:
@@ -303,7 +319,7 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
                   style={{ minWidth: "140px" }}
                   value={ticket.status}
                   disabled={updatingStatus || allowedStatuses.length === 0}
-                  onChange={(e) => handleStatusChange(e.target.value as TicketStatus)}
+                  onChange={(e) => handleStatusSelectChange(e.target.value as TicketStatus)}
                 >
                   <option value={ticket.status}>{ticket.status} (Current)</option>
                   {allowedStatuses.map((st) => (
@@ -437,6 +453,60 @@ export const StaffTicketDetail: React.FC<StaffTicketDetailProps> = ({
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog for Terminal / Irreversible Statuses (Closed, Cancelled - UI-03) */}
+      {pendingStatus && (
+        <div
+          className="modal d-block"
+          tabIndex={-1}
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
+          data-testid="status-confirm-modal"
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content rounded-3 border-0 shadow">
+              <div className="modal-header border-bottom-0 pb-0">
+                <h5 className="modal-title fw-bold text-dark">
+                  Confirm Status Change to {pendingStatus}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setPendingStatus(null)}
+                  disabled={updatingStatus}
+                  data-testid="close-status-modal-btn"
+                ></button>
+              </div>
+              <div className="modal-body py-3">
+                <p className="small text-muted mb-0">
+                  Are you sure you want to transition this ticket to <strong>{pendingStatus}</strong>?
+                  {pendingStatus === "Cancelled" && " This is a terminal state and the ticket cannot be reopened once cancelled."}
+                  {pendingStatus === "Closed" && " The requester will be notified that the issue has reached its final closed state."}
+                </p>
+              </div>
+              <div className="modal-footer border-top-0 pt-0">
+                <button
+                  type="button"
+                  className="btn btn-light btn-sm"
+                  onClick={() => setPendingStatus(null)}
+                  disabled={updatingStatus}
+                  data-testid="cancel-status-confirm-btn"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-sm text-white fw-semibold ${pendingStatus === "Cancelled" ? "btn-danger" : "btn-dark"}`}
+                  onClick={() => handleStatusChange(pendingStatus)}
+                  disabled={updatingStatus}
+                  data-testid="confirm-status-transition-btn"
+                >
+                  {updatingStatus ? "Updating..." : `Confirm ${pendingStatus}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

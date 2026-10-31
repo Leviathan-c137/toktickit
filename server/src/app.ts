@@ -1551,7 +1551,7 @@ const ALLOWED_STATUS_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
   [TicketStatus.WaitingForRequester]: [TicketStatus.InProgress, TicketStatus.Resolved, TicketStatus.Cancelled],
   [TicketStatus.Resolved]: [TicketStatus.Closed, TicketStatus.Reopened],
   [TicketStatus.Closed]: [TicketStatus.Reopened],
-  [TicketStatus.Reopened]: [TicketStatus.InProgress, TicketStatus.Resolved],
+  [TicketStatus.Reopened]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
   [TicketStatus.Cancelled]: [], // Terminal state
   [TicketStatus.Pending]: [TicketStatus.InProgress, TicketStatus.WaitingForRequester, TicketStatus.Resolved, TicketStatus.Cancelled],
 };
@@ -1850,7 +1850,7 @@ app.patch(
       });
     }
 
-    const { status } = req.body;
+    const { status, expectedUpdatedAt } = req.body;
     const validStatuses = Object.values(TicketStatus);
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
@@ -1872,7 +1872,21 @@ app.patch(
         });
       }
 
-      // Check transition rules (BR-09)
+      // Concurrency and stale update detection (BR-08, FR-09, AC-07)
+      if (expectedUpdatedAt) {
+        const clientTimestamp = new Date(expectedUpdatedAt).getTime();
+        const serverTimestamp = new Date(ticket.updatedAt).getTime();
+        if (clientTimestamp !== serverTimestamp) {
+          return res.status(409).json({
+            error: {
+              code: "CONFLICT",
+              message: "Ticket has been modified by another user. Please refresh and review latest changes before updating status.",
+            },
+          });
+        }
+      }
+
+      // Check transition rules (BR-06, BR-09, AC-05)
       const allowedNext = ALLOWED_STATUS_TRANSITIONS[ticket.status] || [];
       if (!allowedNext.includes(status)) {
         return res.status(400).json({
@@ -1886,12 +1900,20 @@ app.patch(
       const updated = await prisma.ticket.update({
         where: { id: ticketId },
         data: { status },
-        select: { id: true, status: true },
+        select: {
+          id: true,
+          ticketNumber: true,
+          status: true,
+          updatedAt: true,
+        },
       });
 
       return res.status(200).json({
+        id: updated.id,
         ticketId: updated.id,
+        ticketNumber: updated.ticketNumber,
         status: updated.status,
+        updatedAt: updated.updatedAt,
       });
     } catch (err) {
       return res.status(500).json({
