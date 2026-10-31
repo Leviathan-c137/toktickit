@@ -8,6 +8,9 @@ import { RequesterTicketDetail } from "./components/RequesterTicketDetail.js";
 import { StaffTicketQueue } from "./components/StaffTicketQueue.js";
 import { StaffTicketDetail } from "./components/StaffTicketDetail.js";
 import { UserManagement } from "./components/UserManagement.js";
+import { RequesterDashboard } from "./components/RequesterDashboard.js";
+import { StaffDashboard } from "./components/StaffDashboard.js";
+import { TicketStatus } from "./types.js";
 import { Login } from "./components/Login.js";
 import { checkSystem, Category, fetchCurrentUser, logoutUser } from "./api.js";
 import { User } from "./types.js";
@@ -20,6 +23,8 @@ function MainContent() {
   const [activeTab, setActiveTab] = useState<string>("tickets");
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [isChangingRequester, setIsChangingRequester] = useState<boolean>(false);
+  const [staffQueueFilter, setStaffQueueFilter] = useState<{ status?: string; ownerId?: string }>({});
+  const [requesterStatusFilter, setRequesterStatusFilter] = useState<string>("");
 
   // Check existing auth session on mount
   useEffect(() => {
@@ -68,6 +73,8 @@ function MainContent() {
     }
     setCurrentUser(null);
     setSelectedTicketId(null);
+    setStaffQueueFilter({});
+    setRequesterStatusFilter("");
     setActiveTab("login");
   };
 
@@ -83,15 +90,21 @@ function MainContent() {
           setActiveTab(tab);
           setSelectedTicketId(null);
           setIsChangingRequester(false);
+          setStaffQueueFilter({});
+          setRequesterStatusFilter("");
         }}
         onChangeRequester={() => {
           setIsChangingRequester(true);
           setSelectedTicketId(null);
+          setStaffQueueFilter({});
+          setRequesterStatusFilter("");
         }}
         user={currentUser}
         onLogout={handleLogout}
         onLoginClick={() => {
           setSelectedTicketId(null);
+          setStaffQueueFilter({});
+          setRequesterStatusFilter("");
           setActiveTab("login");
         }}
       />
@@ -209,6 +222,59 @@ function MainContent() {
                   </div>
                 </div>
               </div>
+            ) : activeTab === "staff-dashboard" ? (
+              <StaffDashboard
+                currentUser={currentUser}
+                onCreateTicket={() => {
+                  setSelectedTicketId(null);
+                  setActiveTab("create-ticket");
+                }}
+                onViewQueue={(filter) => {
+                  setSelectedTicketId(null);
+                  setStaffQueueFilter(filter || {});
+                  setActiveTab("staff-queue");
+                }}
+                onSelectTicket={(ticketId) => {
+                  setSelectedTicketId(ticketId);
+                  setActiveTab("staff-ticket-detail");
+                }}
+              />
+            ) : activeTab === "requester-dashboard" ? (
+              !currentUser ? (
+                <div className="container py-5 text-center" data-testid="requester-dashboard-login-required">
+                  <div className="card shadow-sm border-0 rounded-3 p-4 mx-auto" style={{ maxWidth: 480 }}>
+                    <div className="mb-3" style={{ fontSize: "2.5rem" }}>🔒</div>
+                    <h2 className="h5 fw-bold mb-2">Login Required</h2>
+                    <p className="text-muted mb-4">Please log in to your account to view your personal operational dashboard.</p>
+                    <button
+                      className="btn btn-success fw-semibold"
+                      style={{ backgroundColor: "#006B3C", borderColor: "#006B3C" }}
+                      onClick={() => {
+                        setSelectedTicketId(null);
+                        setActiveTab("login");
+                      }}
+                    >
+                      Go to Login
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <RequesterDashboard
+                  onCreateTicket={() => {
+                    setSelectedTicketId(null);
+                    setActiveTab("create-ticket");
+                  }}
+                  onViewMyTickets={(statusFilter) => {
+                    setSelectedTicketId(null);
+                    setRequesterStatusFilter(statusFilter || "");
+                    setActiveTab("tickets");
+                  }}
+                  onSelectTicket={(ticketId) => {
+                    setSelectedTicketId(ticketId);
+                    setActiveTab("ticket-detail");
+                  }}
+                />
+              )
             ) : activeTab === "create-ticket" ? (
               <CreateTicket
                 onSuccess={() => {
@@ -221,6 +287,8 @@ function MainContent() {
               />
             ) : activeTab === "staff-queue" ? (
               <StaffTicketQueue
+                initialStatus={staffQueueFilter.status}
+                initialOwnerId={staffQueueFilter.ownerId}
                 onSelectTicket={(ticketId) => {
                   setSelectedTicketId(ticketId);
                   setActiveTab("staff-ticket-detail");
@@ -291,6 +359,7 @@ function MainContent() {
 
                 {/* My Tickets View (Issue 4) */}
                 <MyTickets
+                  initialStatus={requesterStatusFilter}
                   onCreateTicket={() => {
                     setSelectedTicketId(null);
                     setActiveTab("create-ticket");

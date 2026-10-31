@@ -25,8 +25,8 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 | **Issue #50** (Issue 1) | `feature/lab4-spec-and-tests` | #56 | [#56](https://github.com/Leviathan-c137/toktickit/pull/56) | @Beethoven190 | **Approved** | @Beethoven190 |
 | **Issue #51** (Issue 2) | `feature/lab4-actions-taken-foundation` | #57 | [#57](https://github.com/Leviathan-c137/toktickit/pull/57) | @Beethoven190 | **Approved** | @Beethoven190 |
 | **Issue #52** (Issue 3) | `feature/lab4-actions-taken-ui` | #58 | [#58](https://github.com/Leviathan-c137/toktickit/pull/58) | @Sxr1n | **Approved** | @Sxr1n |
-| **Issue #53** (Issue 4) | `feature/lab4-ticket-workflow` | #59 | [#59](https://github.com/Leviathan-c137/toktickit/pull/59) | @Beethoven190 | Pending Review | Pending |
-| **Issue #54** (Issue 5) | `feature/lab4-role-dashboards` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
+| **Issue #53** (Issue 4) | `feature/lab4-ticket-workflow` | #59 | [#59](https://github.com/Leviathan-c137/toktickit/pull/59) | @Sxr1n | **Approved** | @Sxr1n |
+| **Issue #54** (Issue 5) | `feature/lab4-role-dashboards` | #60 | [#60](https://github.com/Leviathan-c137/toktickit/pull/60) | @Beethoven190 | In Review | Pending |
 | **Issue #55** (Issue 6) | `feature/lab4-final-hardening` | TBD | Pending Review | @Sxr1n | Pending | Pending |
 | **Release** | `lab4-staging` | TBD | Pending Review | @Beethoven190 | Pending | Pending |
 
@@ -52,4 +52,9 @@ Throughout the Lab 4 sprint, our team strictly adheres to the engineering workfl
 ### PR #59 (Issue #53: Ticket Workflow, Permitted Status Transitions, and Resolution Gate)
 - **Author Summary:** Enforced the formal 8-state ticket transition engine (`server/src/app.ts`) adhering to BR-06, rejecting illegal state leaps with HTTP 400 `INVALID_STATUS_TRANSITION`. Restricted resolution authority exclusively to IT Staff and Administrators (BR-07, AC-06, HTTP 403 for Requesters), preserving purely advisory resolution indications from Requesters. Implemented optimistic concurrency stale-update defense returning HTTP 409 `CONFLICT`. Added dynamic permitted status selector and terminal state (`Cancelled`/`Closed`) confirmation modal to `StaffTicketDetail.tsx` per UI Spec 2.4. Incorporated reviewer feedback from @Sxr1n on timezone offset handling and chronological re-sorting in `ActionsTaken.tsx`. Added 19 backend integration tests in `server/tests/lab-04/ticket-workflow.api.test.ts` (API-05, API-06, API-07) and 9 frontend tests in `client/tests/lab-04/TicketWorkflow.test.tsx` (UI-03), achieving 100% test pass rate across 143 server tests and 64 client tests.
 - **Review Feedback:** *(Awaiting peer reviewer comments)*
+- **Outcome:** *(Pending)*
+
+### PR #60 (Issue #54: Role-Based Dashboards for Requester and IT Staff)
+- **Author Summary:** Implemented authoritative role-based operational dashboards for Requester and IT Staff/Administrator personas. Delivered `GET /api/requester/dashboard` (FR-10, BR-09, BR-10, BR-12) enforcing strict requester data isolation, and `GET /api/staff/dashboard` (FR-11, BR-10, BR-12) computing service desk queue metrics and staff assignment counts. Developed `RequesterDashboard.tsx` (UI-04) featuring 4 metric cards, recent tickets list, and interactive drill-down navigation to filtered `MyTickets`, and `StaffDashboard.tsx` (UI-05) featuring 5 metric cards, recent tickets table, and drill-down navigation to `StaffTicketQueue`. Added 12 backend integration tests (API-08, API-09, API-10) and 14 frontend tests (UI-04, UI-05), passing 100% across all 19 server suites (163/163 tests) and 16 client suites (79/79 tests).
+- **Review Feedback:** *(In Review by @Beethoven190)*
 - **Outcome:** *(Pending)*

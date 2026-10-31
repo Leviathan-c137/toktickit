@@ -717,9 +717,13 @@ app.get(
         "Open",
         "InProgress",
         "Pending",
+        "WaitingForRequester",
         "Resolved",
         "Closed",
         "Cancelled",
+        "Reopened",
+        "OpenGroup",
+        "WaitingGroup",
       ];
       if (req.query.status !== undefined) {
         const status = req.query.status as string;
@@ -730,7 +734,13 @@ app.get(
             message: "Invalid status filter",
           });
         }
-        where.status = status;
+        if (status === "OpenGroup") {
+          where.status = { in: [TicketStatus.New, TicketStatus.Open, TicketStatus.Reopened] };
+        } else if (status === "WaitingGroup") {
+          where.status = { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] };
+        } else {
+          where.status = status;
+        }
       }
 
       // 4. Count total matching items
@@ -1456,7 +1466,15 @@ app.get(
 
       // Status filter
       if (status && typeof status === "string" && status !== "All") {
-        where.status = status;
+        if (status === "OpenGroup") {
+          where.status = { in: [TicketStatus.Open, TicketStatus.Reopened] };
+        } else if (status === "WaitingGroup") {
+          where.status = { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] };
+        } else if (status === "Active") {
+          where.status = { notIn: [TicketStatus.Closed, TicketStatus.Cancelled] };
+        } else {
+          where.status = status;
+        }
       }
 
       // IT Priority filter
@@ -2811,6 +2829,140 @@ app.patch(
     } catch (err) {
       return res.status(500).json({
         error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to update action taken" },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/requester/dashboard
+ * Retrieve operational metrics and recent tickets for the authenticated Requester (FR-10, BR-09, BR-10, BR-12)
+ */
+app.get(
+  "/api/requester/dashboard",
+  authenticateToken,
+  requireRole(Role.Requester),
+  async (req: AuthenticatedUserRequest, res: Response) => {
+    const prisma = getPrisma();
+    const requesterId = req.user!.id;
+
+    try {
+      const [openTickets, inProgress, waitingForRequester, resolved, closed] = await Promise.all([
+        prisma.ticket.count({
+          where: { requesterId, status: { in: [TicketStatus.New, TicketStatus.Open, TicketStatus.Reopened] } },
+        }),
+        prisma.ticket.count({
+          where: { requesterId, status: TicketStatus.InProgress },
+        }),
+        prisma.ticket.count({
+          where: { requesterId, status: { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] } },
+        }),
+        prisma.ticket.count({
+          where: { requesterId, status: TicketStatus.Resolved },
+        }),
+        prisma.ticket.count({
+          where: { requesterId, status: TicketStatus.Closed },
+        }),
+      ]);
+
+      const recentTickets = await prisma.ticket.findMany({
+        where: { requesterId },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          ticketNumber: true,
+          summary: true,
+          status: true,
+          requestedPriority: true,
+          category: { select: { id: true, name: true } },
+          updatedAt: true,
+        },
+      });
+
+      return res.status(200).json({
+        metrics: {
+          openTickets,
+          inProgress,
+          waitingForRequester,
+          resolved,
+          closed,
+        },
+        recentTickets,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch requester dashboard" },
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/staff/dashboard
+ * Retrieve authoritative operational metrics and recent tickets across the service desk (FR-11, BR-10, BR-12)
+ */
+app.get(
+  "/api/staff/dashboard",
+  authenticateToken,
+  requireRole(Role.ITStaff, Role.Administrator),
+  async (req: AuthenticatedUserRequest, res: Response) => {
+    const prisma = getPrisma();
+    const currentUserId = req.user?.id;
+
+    try {
+      const [
+        newTickets,
+        openTickets,
+        inProgressTickets,
+        waitingForRequesterTickets,
+        myAssignedTickets,
+        unassignedTickets,
+      ] = await Promise.all([
+        prisma.ticket.count({ where: { status: TicketStatus.New } }),
+        prisma.ticket.count({ where: { status: { in: [TicketStatus.Open, TicketStatus.Reopened] } } }),
+        prisma.ticket.count({ where: { status: TicketStatus.InProgress } }),
+        prisma.ticket.count({
+          where: { status: { in: [TicketStatus.WaitingForRequester, TicketStatus.Pending] } },
+        }),
+        prisma.ticket.count({
+          where: {
+            ownerId: currentUserId,
+            status: { notIn: [TicketStatus.Closed, TicketStatus.Cancelled] },
+          },
+        }),
+        prisma.ticket.count({ where: { ownerId: null } }),
+      ]);
+
+      const recentTickets = await prisma.ticket.findMany({
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          ticketNumber: true,
+          summary: true,
+          status: true,
+          itPriority: true,
+          requester: { select: { id: true, fullName: true } },
+          owner: { select: { id: true, fullName: true } },
+          updatedAt: true,
+        },
+      });
+
+      return res.status(200).json({
+        metrics: {
+          newTickets,
+          openTickets,
+          inProgressTickets,
+          waitingForRequesterTickets,
+          myAssignedTickets,
+          unassignedTickets,
+        },
+        recentTickets,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch staff dashboard" },
       });
     }
   }
