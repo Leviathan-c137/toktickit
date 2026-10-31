@@ -254,6 +254,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
                 <span className="input-group-text bg-light border-end-0">🔍</span>
                 <input
                   id="queue-search"
+                  data-testid="search-tickets-input"
                   type="text"
                   className="form-control border-start-0"
                   placeholder="Search ticket # or summary..."
@@ -296,6 +297,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
             <div className="col-6 col-md-2">
               <select
                 id="queue-status-filter"
+                data-testid="queue-status-filter"
                 className="form-select form-select-sm"
                 value={status}
                 onChange={(e) => {
@@ -453,7 +455,7 @@ export const StaffTicketQueue: React.FC<StaffTicketQueueProps> = ({
               </thead>
               <tbody>
                 {tickets.map((t) => (
-                  <tr key={t.id} style={{ cursor: onSelectTicket ? "pointer" : "default" }}>
+                  <tr key={t.id} data-testid={`ticket-row-${t.id}`} style={{ cursor: onSelectTicket ? "pointer" : "default" }}>
                     <td className="fw-semibold">
                       <span
                         className="text-decoration-none"
